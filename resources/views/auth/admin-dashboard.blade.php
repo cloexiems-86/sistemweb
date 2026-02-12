@@ -39,52 +39,62 @@
 <div class="flex h-screen overflow-hidden">
 <!-- Sidebar Navigation -->
 <aside class="w-72 bg-white dark:bg-[#1a2b15] border-r border-[#dee5dc] dark:border-white/10 flex flex-col h-full">
-<div class="p-6 flex flex-col gap-6">
-<div class="flex gap-3 items-center">
-<div class="bg-primary/20 rounded-full p-2">
-<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="KUA Mojo official logo graphic" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBo3mVkRH0Zq0yhiYSIMB95OUeIFijZn2pE5UTp5y91T4DlOKoNQfDKhKWb1gBhFISXSRwwxWONTtgw_azXSrUibqjZNqyvm3QU9vgdIbw5D7PO7w6Go2Frr3qtkWGlCfYMemJJhvI1b4xQUNnoKM8te_g6n3r2i8P5J7XOORxL3cHjulqiKMpvZLaXqDlKOIryUygNDtiRvPHXIe7PiupD6yK4Ft7HJCnmrrhTNCUud89Qrrjp3wB7IDqloq6lsDoPPAW1PAojVw");'></div>
-</div>
-<div class="flex flex-col">
-<h1 class="text-[#131811] dark:text-white text-base font-bold leading-none">KUA Mojo</h1>
-<p class="text-[#6c8863] dark:text-[#a0c49d] text-xs font-medium mt-1 uppercase tracking-wider">E-Learning Admin</p>
-</div>
-</div>
-<nav class="flex flex-col gap-1">
-<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary text-[#131811] font-semibold" href="#">
-<span class="material-symbols-outlined">dashboard</span>
-<span class="text-sm">Dashboard</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#131811] dark:text-white/80 hover:bg-[#f1f4f0] dark:hover:bg-white/5 transition-colors" href="#">
-<span class="material-symbols-outlined">group</span>
-<span class="text-sm">Data Catin</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#131811] dark:text-white/80 hover:bg-[#f1f4f0] dark:hover:bg-white/5 transition-colors" href="#">
-<span class="material-symbols-outlined">verified_user</span>
-<span class="text-sm">Data Pendamping</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#131811] dark:text-white/80 hover:bg-[#f1f4f0] dark:hover:bg-white/5 transition-colors" href="#">
-<span class="material-symbols-outlined">auto_stories</span>
-<span class="text-sm">Materi Edukasi</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#131811] dark:text-white/80 hover:bg-[#f1f4f0] dark:hover:bg-white/5 transition-colors" href="#">
-<span class="material-symbols-outlined">calendar_today</span>
-<span class="text-sm">Jadwal Bimbingan</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#131811] dark:text-white/80 hover:bg-[#f1f4f0] dark:hover:bg-white/5 transition-colors" href="#">
-<span class="material-symbols-outlined">settings</span>
-<span class="text-sm">Pengaturan</span>
-</a>
-</nav>
-</div>
-<div class="mt-auto p-6 border-t border-[#dee5dc] dark:border-white/10">
-<div class="bg-primary/10 rounded-lg p-4">
-<p class="text-xs text-[#131811] dark:text-white/70 font-medium">System Status</p>
-<div class="flex items-center gap-2 mt-1">
-<span class="size-2 bg-primary rounded-full animate-pulse"></span>
-<span class="text-xs font-bold text-[#131811] dark:text-white">Active Online</span>
-</div>
-</div>
-</div>
+    <div class="p-6 flex flex-col gap-6">
+        <div class="flex gap-3 items-center">
+            <div class="bg-primary/20 rounded-full p-2">
+                <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBo3mVkRH0Zq0yhiYSIMB95OUeIFijZn2pE5UTp5y91T4DlOKoNQfDKhKWb1gBhFISXSRwwxWONTtgw_azXSrUibqjZNqyvm3QU9vgdIbw5D7PO7w6Go2Frr3qtkWGlCfYMemJJhvI1b4xQUNnoKM8te_g6n3r2i8P5J7XOORxL3cHjulqiKMpvZLaXqDlKOIryUygNDtiRvPHXIe7PiupD6yK4Ft7HJCnmrrhTNCUud89Qrrjp3wB7IDqloq6lsDoPPAW1PAojVw");'></div>
+            </div>
+            <div class="flex flex-col">
+                <h1 class="text-[#131811] dark:text-white text-base font-bold leading-none">KUA Mojo</h1>
+                <p class="text-[#6c8863] dark:text-[#a0c49d] text-xs font-medium mt-1 uppercase tracking-wider">E-Learning Admin</p>
+            </div>
+        </div>
+
+        <nav class="flex flex-col gap-1">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary text-[#131811] font-semibold" 
+            href="{{ route('admin.dashboard') }}">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span class="text-sm">Dashboard</span>
+            </a>
+
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#131811] dark:text-white/80 hover:bg-[#f1f4f0] dark:hover:bg-white/5 transition-colors" 
+            href="{{ route('admin.catin.index') }}">
+                <span class="material-symbols-outlined">group</span>
+                <span class="text-sm">Data Catin</span>
+            </a>
+
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#131811] dark:text-white/80 hover:bg-[#f1f4f0] dark:hover:bg-white/5 transition-colors" 
+            href="{{ route('admin.pendamping.index') }}">
+                <span class="material-symbols-outlined">verified_user</span>
+                <span class="text-sm">Data Pendamping</span>
+            </a>
+
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#131811] dark:text-white/80 hover:bg-[#f1f4f0] dark:hover:bg-white/5 transition-colors" href="#">
+                <span class="material-symbols-outlined">auto_stories</span>
+                <span class="text-sm">Materi Edukasi</span>
+            </a>
+
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#131811] dark:text-white/80 hover:bg-[#f1f4f0] dark:hover:bg-white/5 transition-colors" href="#">
+                <span class="material-symbols-outlined">calendar_today</span>
+                <span class="text-sm">Jadwal Bimbingan</span>
+            </a>
+
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#131811] dark:text-white/80 hover:bg-[#f1f4f0] dark:hover:bg-white/5 transition-colors" href="#">
+                <span class="material-symbols-outlined">settings</span>
+                <span class="text-sm">Pengaturan</span>
+            </a>
+        </nav>
+    </div>
+
+    <div class="mt-auto p-6 border-t border-[#dee5dc] dark:border-white/10">
+        <div class="bg-primary/10 rounded-lg p-4">
+            <p class="text-xs text-[#131811] dark:text-white/70 font-medium">System Status</p>
+            <div class="flex items-center gap-2 mt-1">
+                <span class="size-2 bg-primary rounded-full animate-pulse"></span>
+                <span class="text-xs font-bold text-[#131811] dark:text-white">Active Online</span>
+            </div>
+        </div>
+    </div>
 </aside>
 <!-- Main Content Area -->
 <main class="flex-1 flex flex-col overflow-y-auto">
@@ -273,7 +283,7 @@
 </div>
 <!-- Footer -->
 <footer class="mt-auto px-8 py-6 text-center border-t border-[#dee5dc] dark:border-white/10 bg-white dark:bg-[#1a2b15]">
-<p class="text-sm text-[#6c8863] dark:text-white/40">© 2023 KUA Mojo E-Learning System. Ministry of Religious Affairs Republic of Indonesia.</p>
+<p class="text-sm text-[#6c8863] dark:text-white/40">© 202 KUA Mojo E-Learning System. Ministry of Religious Affairs Republic of Indonesia.</p>
 </footer>
 </main>
 </div>
