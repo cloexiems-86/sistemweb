@@ -1,0 +1,336 @@
+@extends('layouts.app')
+
+@section('title','Data Catin')
+@section('page-title','Manajemen Akun Calon Pengantin')
+
+@section('content')
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+@if(session('success'))
+<script>
+    window.successMessage = "{{ session('success') }}";
+</script>
+@endif
+
+{{-- HEADER SECTION --}}
+<div class="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-10">
+    <div>
+        <h1 class="text-3xl font-black tracking-tight text-gray-800 dark:text-white">Data Pasangan</h1>
+        <p class="text-gray-500 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-[#4ce619] animate-pulse"></span>
+            Monitoring akun dan verifikasi berkas Catin
+        </p>
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+        <div class="relative group">
+            <span class="material-symbols-outlined absolute left-3 top-2.5 text-gray-400 group-focus-within:text-[#4ce619] transition-colors">search</span>
+            <input type="text" id="search" placeholder="Cari nama / username..."
+                class="pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm w-full sm:w-64 dark:bg-dark-surface focus:ring-2 focus:ring-[#4ce619]/20 focus:border-[#4ce619] outline-none transition-all shadow-sm"/>
+        </div>
+
+        <a href="{{ route('admin.catin.create') }}"
+            class="flex items-center justify-center gap-2 px-6 py-2.5 bg-[#4ce619] text-white font-bold rounded-xl shadow-lg shadow-green-200 hover:shadow-green-300 hover:-translate-y-1 transition-all active:scale-95">
+            <span class="material-symbols-outlined">person_add</span>
+            Tambah Catin
+        </a>
+    </div>
+</div>
+
+{{-- STATISTIK CARDS --}}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    {{-- Total Catin --}}
+    <div class="bg-white dark:bg-dark-surface p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-[#4ce619]/30 transition-all">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-gray-500 text-xs font-black uppercase tracking-wider">Total Catin</p>
+                {{-- total() dari paginator sudah mengambil angka riil seluruh row --}}
+                <h2 class="text-4xl font-black mt-1 text-gray-800 dark:text-white">{{ $catin->total() }}</h2>
+            </div>
+            <div class="p-3 bg-gray-50 rounded-xl">
+                <span class="material-symbols-outlined text-gray-400">group</span>
+            </div>
+        </div>
+    </div>
+
+    {{-- Akun Aktif --}}
+    <div class="bg-white dark:bg-dark-surface p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-[#4ce619]/30 transition-all">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-[#4ce619] text-xs font-black uppercase tracking-wider text-opacity-70">Akun Aktif</p>
+                <h2 class="text-4xl font-black mt-1 text-[#4ce619]">
+                    {{ \App\Models\Catin::where('status', 'aktif')->count() }}
+                </h2>
+            </div>
+            <div class="p-3 bg-green-50 rounded-xl text-[#4ce619]">
+                <span class="material-symbols-outlined">verified_user</span>
+            </div>
+        </div>
+    </div>
+
+    {{-- Menunggu/Nonaktif --}}
+    <div class="bg-white dark:bg-dark-surface p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-amber-200 transition-all">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-amber-500 text-xs font-black uppercase tracking-wider text-opacity-70">Menunggu/Nonaktif</p>
+                <h2 class="text-4xl font-black mt-1 text-amber-500">
+                    {{ \App\Models\Catin::where('status', '!=', 'aktif')->count() }}
+                </h2>
+            </div>
+            <div class="p-3 bg-amber-50 rounded-xl text-amber-500">
+                <span class="material-symbols-outlined">pending_actions</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- TABLE SECTION --}}
+<div class="bg-white dark:bg-dark-surface rounded-3xl border border-gray-100 overflow-hidden shadow-xl shadow-gray-200/50">
+    <div class="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
+        <div class="flex items-center gap-2">
+            <span class="w-8 h-8 rounded-lg bg-[#4ce619] text-white flex items-center justify-center font-bold text-xs">{{ $catin->count() }}</span>
+            <p class="font-black text-gray-700 dark:text-white uppercase text-xs tracking-widest">Daftar Registrasi Pasangan</p>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead class="bg-gray-50/80 border-b text-[11px] uppercase text-gray-400 font-black tracking-widest">
+                <tr>
+                    <th class="px-6 py-4">Informasi Pasangan</th>
+                    <th class="px-6 py-4">Akun & Kontak</th>
+                    <th class="px-6 py-4 text-center">Kelengkapan Berkas</th>
+                    <th class="px-6 py-4 text-center">Status Akun</th>
+                    <th class="px-6 py-4 text-center">Aksi</th>
+                </tr>
+            </thead>
+
+            <tbody id="tableBody" class="divide-y divide-gray-50">
+                @forelse ($catin as $item)
+                <tr class="group hover:bg-[#4ce619]/5 transition-all duration-300">
+
+                    {{-- PASANGAN --}}
+                    <td class="px-6 py-5">
+                        <div class="flex items-center gap-4">
+                            <div class="relative">
+                                <img src="https://ui-avatars.com/api/?name={{ $item->nama_suami }}&background=4ce619&color=fff&bold=true"
+                                    class="w-12 h-12 rounded-2xl shadow-sm border-2 border-white group-hover:scale-110 transition-transform"/>
+                                <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm">
+                                    <span class="material-symbols-outlined text-[14px] text-pink-500 font-bold">favorite</span>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col">
+                                <span class="font-black text-gray-800 dark:text-white uppercase text-sm tracking-tight leading-none mb-1">
+                                    {{ $item->nama_suami }}
+                                </span>
+                                <span class="text-xs font-bold text-pink-500 uppercase tracking-tighter opacity-80">
+                                    {{ $item->nama_istri }}
+                                </span>
+                                <div class="flex items-center gap-1 mt-1.5 opacity-60">
+                                    <span class="material-symbols-outlined text-[12px]">calendar_today</span>
+                                    <p class="text-[10px] font-medium italic">
+                                        Reg: {{ optional($item->created_at)->format('d/m/Y') }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+
+                    {{-- AKUN & KONTAK --}}
+                    <td class="px-6 py-5">
+                        <div class="space-y-1">
+                            <div class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-[#4ce619]/10 text-[#4ce619] text-[11px] font-black uppercase">
+                                @ {{ $item->username }}
+                            </div>
+                            <div class="flex items-center gap-2 text-xs font-bold text-gray-600 dark:text-gray-400">
+                                <span class="material-symbols-outlined text-[16px] text-green-500">call</span>
+                                {{ $item->phone_suami }}
+                            </div>
+                            <div class="flex flex-col text-[10px] text-gray-400 font-medium leading-tight mt-1">
+                                <span>NIK S: {{ $item->nik_suami ?? 'N/A' }}</span>
+                                <span>NIK I: {{ $item->nik_istri ?? 'N/A' }}</span>
+                            </div>
+                        </div>
+                    </td>
+
+                    {{-- PROGRESS DOKUMEN --}}
+                    <td class="px-6 py-5">
+                        @php
+                            $docs = ['ktp_suami', 'ktp_istri', 'kk_suami', 'kk_istri'];
+                            $filled = 0;
+                            foreach($docs as $d) if($item->$d) $filled++;
+                            $percentage = ($filled/4) * 100;
+                        @endphp
+
+                        <div class="flex flex-col items-center max-w-[120px] mx-auto">
+                            <div class="flex justify-between w-full mb-1 text-[10px] font-black">
+                                <span class="{{ $filled == 4 ? 'text-[#4ce619]' : 'text-amber-500' }}">
+                                    {{ $filled }}/4 BERKAS
+                                </span>
+                                <span class="text-gray-400">{{ $percentage }}%</span>
+                            </div>
+                            
+                            <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden p-[1px]">
+                                <div class="h-full rounded-full transition-all duration-700 {{ $filled == 4 ? 'bg-[#4ce619]' : 'bg-gradient-to-r from-amber-400 to-amber-500' }}" 
+                                     style="width: {{ $percentage }}%">
+                                </div>
+                            </div>
+
+                            <div class="flex gap-1 mt-2">
+                                @foreach($docs as $doc)
+                                    <div class="w-2 h-2 rounded-full {{ $item->$doc ? 'bg-[#4ce619]' : 'bg-gray-200' }}" title="{{ strtoupper(str_replace('_',' ',$doc)) }}"></div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </td>
+
+                    {{-- STATUS --}}
+                    <td class="px-6 py-5 text-center">
+                        <span class="inline-flex items-center px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border-2
+                            {{ $item->status == 'aktif'
+                                ? 'bg-green-50 text-[#4ce619] border-[#4ce619]/20'
+                                : 'bg-gray-50 text-gray-400 border-gray-200' }}">
+                            <span class="w-1.5 h-1.5 rounded-full mr-2 {{ $item->status == 'aktif' ? 'bg-[#4ce619]' : 'bg-gray-400' }}"></span>
+                            {{ $item->status }}
+                        </span>
+                    </td>
+
+                    {{-- TRACKING PROGRES (Real Data) --}}
+                    <td class="px-6 py-5">
+                        <div class="flex flex-col gap-2 min-w-[180px]">
+                            @php
+                                // Logika tracking: sesuaikan dengan field di database Anda
+                                // Asumsi: ada field bimbingan_status, kuis_score, is_lulus
+                                $step = 1;
+                                if($item->is_lulus) { $step = 3; } 
+                                elseif($item->kuis_done) { $step = 2; }
+                            @endphp
+
+                            <div class="flex items-center justify-between text-[9px] font-black uppercase tracking-tighter mb-1">
+                                <span class="{{ $step >= 1 ? 'text-[#4ce619]' : 'text-gray-300' }}">Bimbingan</span>
+                                <span class="{{ $step >= 2 ? 'text-[#4ce619]' : 'text-gray-300' }}">Kuis</span>
+                                <span class="{{ $step >= 3 ? 'text-[#4ce619]' : 'text-gray-300' }}">Sertifikat</span>
+                            </div>
+
+                            <div class="relative w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div class="absolute h-full bg-[#4ce619] transition-all duration-1000 shadow-[0_0_8px_#4ce619]" 
+                                     style="width: {{ $step == 3 ? '100' : ($step == 2 ? '66' : '33') }}%"></div>
+                            </div>
+
+                            <div class="flex items-center gap-1 mt-1">
+                                @if($item->is_lulus)
+                                    <span class="flex items-center gap-1 text-[10px] font-bold text-[#4ce619]">
+                                        <span class="material-symbols-outlined text-[14px]">workspace_premium</span> LULUS
+                                    </span>
+                                @else
+                                    <span class="text-[10px] font-bold text-amber-500 flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-[14px] animate-spin">sync</span> SEDANG PROSES
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+                    </td>
+
+                    {{-- AKSI --}}
+                    <td class="px-6 py-5 text-center">
+                        <div class="flex justify-center items-center gap-1">
+                            {{-- TOMBOL BARU: LIHAT DETAIL PROGRES --}}
+                            <a href="{{ route('admin.catin.show', $item->id) }}"
+                                class="w-9 h-9 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white rounded-xl transition-all shadow-sm hover:shadow-blue-200"
+                                title="Lihat Progres">
+                                <span class="material-symbols-outlined text-[20px]">visibility</span>
+                            </a>
+
+                            <a href="{{ route('admin.catin.edit', $item->id) }}"
+                                class="w-9 h-9 flex items-center justify-center text-amber-500 hover:bg-amber-500 hover:text-white rounded-xl transition-all shadow-sm hover:shadow-amber-200"
+                                title="Edit Data">
+                                <span class="material-symbols-outlined text-[20px]">edit_note</span>
+                            </a>
+
+                            <form action="{{ route('admin.catin.destroy', $item->id) }}"
+                                method="POST" class="form-hapus inline">
+                                @csrf @method('DELETE')
+                                <button type="button"
+                                    class="btn-hapus w-9 h-9 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white rounded-xl transition-all shadow-sm hover:shadow-red-200"
+                                    title="Hapus Data">
+                                    <span class="material-symbols-outlined text-[20px]">delete_sweep</span>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="5" class="py-20">
+                        <div class="flex flex-col items-center justify-center opacity-30">
+                            <span class="material-symbols-outlined text-6xl">folder_off</span>
+                            <p class="font-black italic mt-2 uppercase tracking-widest text-sm">Belum ada data catin</p>
+                        </div>
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+{{-- PAGINATION SECTION --}}
+{{-- PAGINATION SECTION --}}
+    @if ($catin->hasPages())
+    <div class="p-6 border-t border-gray-100 bg-gray-50/30 flex justify-center items-center">
+        {{-- Pastikan path filenya benar: resources/views/partials/pagination.blade.php --}}
+        {{ $catin->links('partials.pagination') }}
+    </div>
+    @endif
+</div>
+
+{{-- SCRIPT --}}
+<script>
+    // Sweetalert Success
+    if(window.successMessage){
+        Swal.fire({
+            icon: 'success',
+            title: '<span class="font-black uppercase text-xl">Berhasil</span>',
+            text: window.successMessage,
+            timer: 2500,
+            showConfirmButton: false,
+            borderRadius: '20px',
+            confirmButtonColor: '#4ce619'
+        })
+    }
+
+    // Delete Confirmation
+    document.querySelectorAll('.btn-hapus').forEach(btn => {
+        btn.addEventListener('click', function() {
+            let form = this.closest('.form-hapus')
+            Swal.fire({
+                title: '<span class="font-black uppercase text-red-600">Hapus Data?</span>',
+                text: "Data yang dihapus tidak dapat dikembalikan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'YA, HAPUS',
+                cancelButtonText: 'BATAL',
+                reverseButtons: true,
+                borderRadius: '20px'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit()
+                }
+            })
+        })
+    })
+
+    // Real-time Search
+    document.getElementById("search").addEventListener("keyup", function() {
+        let value = this.value.toLowerCase()
+        document.querySelectorAll("#tableBody tr").forEach(row => {
+            row.style.display = row.innerText.toLowerCase().includes(value) ? "" : "none"
+        })
+    })
+</script>
+
+@endsection
