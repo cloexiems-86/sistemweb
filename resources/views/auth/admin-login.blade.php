@@ -50,7 +50,7 @@
 
     <div class="absolute inset-0 bg-custom-pattern z-0"></div>
 
-    <div class="w-full max-w-[480px] relative z-10">
+<div class="w-full max-w-[560px] relative z-10">
         <div class="absolute -top-20 -left-20 w-64 h-64 bg-emerald-200/50 rounded-full blur-3xl"></div>
         <div class="absolute -bottom-20 -right-20 w-64 h-64 bg-amber-100/50 rounded-full blur-3xl"></div>
 
@@ -89,7 +89,7 @@
                 @csrf
 
                 <div class="space-y-2">
-                    <label class="text-[#064e3b] text-[11px] font-black uppercase tracking-widest pl-1">Username / Email</label>
+                    <label class="text-[#064e3b] text-[11px] font-black uppercase tracking-widest pl-1">Username</label>
                     <div class="relative group">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <span class="material-symbols-outlined text-emerald-600 group-focus-within:text-amber-500 transition-colors">person</span>
@@ -101,15 +101,15 @@
                 <div class="space-y-2">
                     <div class="flex justify-between items-center pl-1">
                         <label class="text-[#064e3b] text-[11px] font-black uppercase tracking-widest">Password</label>
-                        <a class="text-[10px] text-emerald-600 font-bold hover:text-amber-600 transition underline decoration-emerald-200 underline-offset-4" href="#">Lupa Password?</a>
+
                     </div>
-                    <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                             <span class="material-symbols-outlined text-emerald-600 group-focus-within:text-amber-500 transition-colors">lock</span>
                         </div>
-                        <input name="password" id="password" class="w-full rounded-2xl border-emerald-100 bg-emerald-50/30 h-14 pl-12 pr-12 text-sm font-semibold focus:border-amber-400 focus:ring-4 focus:ring-amber-400/10 transition-all placeholder:text-emerald-900/30 text-emerald-900" placeholder="••••••••" type="password" required/>
-                        <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-emerald-400 hover:text-amber-500 transition-colors" onclick="togglePassword()">
-                            <span class="material-symbols-outlined text-[20px]" id="pass-icon">visibility</span>
+                        <input name="password" id="password" class="w-full rounded-3xl border-emerald-100 bg-emerald-50/30 h-16 pl-14 pr-14 text-base font-semibold focus:border-amber-400 focus:ring-4 focus:ring-amber-400/10 transition-all placeholder:text-emerald-900/30 text-emerald-900" placeholder="••••••••" type="password" required/>
+                        <button type="button" class="absolute inset-y-0 right-0 pr-5 flex items-center text-emerald-400 hover:text-amber-500 transition-colors" onclick="togglePassword()">
+                            <span class="material-symbols-outlined text-[22px]" id="pass-icon">visibility</span>
                         </button>
                     </div>
                 </div>
@@ -128,7 +128,10 @@
                         <span class="material-symbols-outlined relative text-amber-400 group-hover:translate-x-1 transition-transform">arrow_forward</span>
                     </button>
                 </div>
-            </form>
+</form>
+
+
+
         </div>
 
         <div class="mt-8 flex flex-col items-center gap-6">

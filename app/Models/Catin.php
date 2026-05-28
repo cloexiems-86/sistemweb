@@ -30,7 +30,8 @@ class Catin extends Model
         'ktp_istri',
         'kk_suami',
         'kk_istri',
-        'pendamping_id' // Pastikan kolom ini ada jika ingin relasi ke pendamping
+        'pendamping_id',
+        'role' // Pastikan kolom ini ada jika ingin relasi ke pendamping
     ];
 
     /**
@@ -39,7 +40,41 @@ class Catin extends Model
      */
     public function ujian()
     {
-        return $this->hasOne(Ujian::class, 'catin_id');
+        return $this->hasOne(Ujian::class, 'catin_id')->latestOfMany();
+    }
+
+    /**
+     * Semua hasil ujian yang terkait dengan pasangan (bisa per-individu)
+     */
+    public function ujians()
+    {
+        return $this->hasMany(Ujian::class, 'catin_id');
+    }
+
+    /**
+     * Hasil ujian khusus suami bila ada
+     */
+    public function ujianSuami()
+    {
+        return $this->hasOne(Ujian::class, 'catin_id')
+            ->where(function ($query) {
+                $query->where('person', 'suami')
+                      ->orWhere('nama_peserta', $this->nama_suami);
+            })
+            ->latestOfMany();
+    }
+
+    /**
+     * Hasil ujian khusus istri bila ada
+     */
+    public function ujianIstri()
+    {
+        return $this->hasOne(Ujian::class, 'catin_id')
+            ->where(function ($query) {
+                $query->where('person', 'istri')
+                      ->orWhere('nama_peserta', $this->nama_istri);
+            })
+            ->latestOfMany();
     }
 
     /**
@@ -51,12 +86,40 @@ class Catin extends Model
         return $this->belongsTo(Pendamping::class, 'pendamping_id');
     }
 
-    // /**
-    //  * Accessor untuk Nama Gabungan (Opsional)
-    //  * Memudahkan pemanggilan nama pasangan di tampilan tabel
-    //  */
-    // public function getNamaLengkapAttribute()
-    // {
-    //     return "{$this->nama_suami} & {$this->nama_istri}";
-    // }
+    /**
+     * Relasi Many-to-Many ke Tabel Jadwal
+     * Digunakan untuk mengambil jadwal yang diikuti catin
+     */
+    public function jadwals()
+    {
+        return $this->belongsToMany(Jadwal::class, 'catin_jadwal', 'catin_id', 'jadwal_id');
+    }
+
+    /**
+     * Nama pendamping utama untuk Catin.
+     * Jika relasi pendamping langsung kosong, gunakan pendamping dari jadwal terakhir.
+     */
+    public function getPendampingAssignedAttribute()
+    {
+        if ($this->pendamping) {
+            return $this->pendamping->nama;
+        }
+
+        if ($this->relationLoaded('jadwals')) {
+            $jadwal = $this->jadwals->sortByDesc('tanggal')->first();
+            return $jadwal?->pendamping?->nama;
+        }
+
+        $jadwal = $this->jadwals()->with('pendamping')->latest('tanggal')->first();
+        return $jadwal?->pendamping?->nama;
+    }
+
+    /**
+     * Accessor untuk Nama Gabungan (Opsional)
+     * Memudahkan pemanggilan nama pasangan di tampilan tabel
+     */
+    public function getNamaLengkapAttribute()
+    {
+        return "{$this->nama_suami} & {$this->nama_istri}";
+    }
 }

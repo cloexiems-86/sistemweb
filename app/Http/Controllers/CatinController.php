@@ -40,15 +40,15 @@ public function index() {
             'password' => 'required|min:6',
 
             'nama_suami' => 'required',
-            'nik_suami' => 'required|digits:16',
-            'phone_suami' => 'required',
-            'email_suami' => 'required|email',
+            'nik_suami' => 'required|digits:16|unique:catins,nik_suami',
+            'phone_suami' => 'required|unique:catins,phone_suami',
+            'email_suami' => 'required|email|unique:catins,email_suami',
             'alamat_suami' => 'required', 
 
             'nama_istri' => 'required',
-            'nik_istri' => 'required|digits:16',
-            'phone_istri' => 'required',
-            'email_istri' => 'required|email',
+            'nik_istri' => 'required|digits:16|unique:catins,nik_istri',
+            'phone_istri' => 'required|unique:catins,phone_istri',
+            'email_istri' => 'required|email|unique:catins,email_istri',
             'alamat_istri' => 'required', 
 
             'wedding_date' => 'required|date',
@@ -57,13 +57,21 @@ public function index() {
             'ktp_istri' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
             'kk_suami' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
             'kk_istri' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+        ], [
+            'username.unique' => 'Username sudah terdaftar, gunakan username lain',
+            'nik_suami.unique' => 'NIK Suami sudah terdaftar',
+            'nik_istri.unique' => 'NIK Istri sudah terdaftar',
+            'phone_suami.unique' => 'No WA Suami sudah terdaftar',
+            'phone_istri.unique' => 'No WA Istri sudah terdaftar',
+            'email_suami.unique' => 'Email Suami sudah terdaftar',
+            'email_istri.unique' => 'Email Istri sudah terdaftar',
         ]);
 
         // 2. AMBIL DATA
         $data = $request->only([
             'username', 'nama_suami', 'nik_suami', 'phone_suami', 'email_suami', 'alamat_suami',
             'nama_istri', 'nik_istri', 'phone_istri', 'email_istri', 'alamat_istri',
-            'wedding_date',
+            'wedding_date'
         ]);
 
         // 3. HASH PASSWORD
@@ -76,7 +84,7 @@ public function index() {
         $data['kk_istri']  = $request->file('kk_istri')->store('kk', 'public');
 
         $data['status'] = 'aktif';
-
+        $data['role'] = 'catin'; // Menandakan ini adalah catin, bukan pendamping
         // 5. SIMPAN
         Catin::create($data);
 
@@ -92,10 +100,26 @@ public function index() {
         $request->validate([
             'username' => 'required|unique:catins,username,' . $id,
             'nama_suami' => 'required',
-            'nama_istri' => 'required',
+            'nik_suami' => 'required|digits:16|unique:catins,nik_suami,' . $id,
+            'phone_suami' => 'required|unique:catins,phone_suami,' . $id,
+            'email_suami' => 'required|email|unique:catins,email_suami,' . $id,
             'alamat_suami' => 'required',
+            
+            'nama_istri' => 'required',
+            'nik_istri' => 'required|digits:16|unique:catins,nik_istri,' . $id,
+            'phone_istri' => 'required|unique:catins,phone_istri,' . $id,
+            'email_istri' => 'required|email|unique:catins,email_istri,' . $id,
             'alamat_istri' => 'required',
+            
             'status' => 'required|in:aktif,nonaktif'
+        ], [
+            'username.unique' => 'Username sudah terdaftar, gunakan username lain',
+            'nik_suami.unique' => 'NIK Suami sudah terdaftar',
+            'nik_istri.unique' => 'NIK Istri sudah terdaftar',
+            'phone_suami.unique' => 'No WA Suami sudah terdaftar',
+            'phone_istri.unique' => 'No WA Istri sudah terdaftar',
+            'email_suami.unique' => 'Email Suami sudah terdaftar',
+            'email_istri.unique' => 'Email Istri sudah terdaftar',
         ]);
 
         $data = $request->only([

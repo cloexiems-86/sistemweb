@@ -39,9 +39,9 @@ class PendampingController extends Controller
     {
         $request->validate([
             'nama'     => 'required|string|max:255',
-            'nip'      => 'nullable|string|max:50',
+            'nip'      => 'nullable|string|max:50|unique:pendamping,nip',
             'email'    => 'required|email|unique:pendamping,email',
-            'no_hp'    => 'nullable|string|max:20',
+            'no_hp'    => 'nullable|string|max:20|unique:pendamping,no_hp',
             'password' => 'required|min:6',
             'status'   => 'required|in:aktif,nonaktif'
         ]);
@@ -78,9 +78,9 @@ class PendampingController extends Controller
 
         $request->validate([
             'nama'   => 'required|string|max:255',
-            'nip'    => 'nullable|string|max:50',
+            'nip'    => 'nullable|string|max:50|unique:pendamping,nip,' . $id,
             'email'  => 'required|email|unique:pendamping,email,' . $id,
-            'no_hp'  => 'nullable|string|max:20',
+            'no_hp'  => 'nullable|string|max:20|unique:pendamping,no_hp,' . $id,
             'status' => 'required|in:aktif,nonaktif'
         ]);
 
@@ -114,5 +114,38 @@ class PendampingController extends Controller
         return redirect()
             ->route('admin.pendamping.index')
             ->with('success', 'Data pendamping berhasil dihapus');
+    }
+
+    // ======================
+    // CHECK NIP UNIQUE (AJAX)
+    // ======================
+    public function checkNip(Request $request)
+    {
+        $nip = $request->input('nip');
+        $exists = Pendamping::where('nip', $nip)->exists();
+        
+        return response()->json(['exists' => $exists]);
+    }
+
+    // ======================
+    // CHECK EMAIL UNIQUE (AJAX)
+    // ======================
+    public function checkEmail(Request $request)
+    {
+        $email = $request->input('email');
+        $exists = Pendamping::where('email', $email)->exists();
+        
+        return response()->json(['exists' => $exists]);
+    }
+
+    // ======================
+    // CHECK WHATSAPP UNIQUE (AJAX)
+    // ======================
+    public function checkWhatsapp(Request $request)
+    {
+        $no_hp = $request->input('no_hp');
+        $exists = Pendamping::where('no_hp', $no_hp)->exists();
+        
+        return response()->json(['exists' => $exists]);
     }
 }

@@ -16,7 +16,7 @@ class UjianController extends Controller
      */
     public function index()
     {
-        $ujianResults = Ujian::with(['catin.pendamping'])->latest()->paginate(10);
+        $ujianResults = Ujian::with(['catin.pendamping', 'catin.jadwals.pendamping'])->latest()->paginate(5);
 
         $totalUjian = Ujian::count();
         $totalLulus = Ujian::where('status_kelulusan', 'lulus')->count();
@@ -261,6 +261,48 @@ class UjianController extends Controller
             return back()->with('error', 'Belum lulus!');
         }
 
-        return view('ujian.sertifikat', compact('ujian'));
+        return view('ujian.data-ujian', compact('ujian'));
+    }
+    public function exportPdf()
+    {
+        $ujianResults = \App\Models\Ujian::with(['catin.pendamping', 'catin.jadwals.pendamping'])->latest()->get();
+        $pdf = \PDF::loadView('ujian.export-pdf', compact('ujianResults'));
+        $filename = 'hasil-ujian-' . now()->format('Y-m-d-His') . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    public function exportExcel()
+    {
+        $ujians = \App\Models\Ujian::with(['catin.pendamping', 'catin.jadwals.pendamping'])->get();
+        $filename = 'hasil-ujian-' . now()->format('Y-m-d-His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="'  . $filename . '"',
+        ];
+
+        $columns = ['NO','NAMA CATIN','PENDAMPING','JAWABAN BENAR','JAWABAN SALAH','SKOR','STATUS KELULUSAN','TANGGAL'];
+
+        $callback = function() use ($ujians, $columns) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, $columns);
+            $no = 1;
+            foreach ($ujians as $ujian) {
+                $row = [
+                    $no++,
+                    $ujian->catin?->nama_suami ?? '',
+                    $ujian->catin?->pendamping_assigned ?? 'Tanpa Pendamping',
+                    $ujian->jawaban_benar ?? '',
+                    $ujian->jawaban_salah ?? '',
+                    $ujian->skor ?? '',
+                    $ujian->status_kelulusan ?? '',
+                    $ujian->created_at ? $ujian->created_at->format('Y-m-d H:i:s') : '',
+                ];
+                fputcsv($out, $row);
+            }
+            fclose($out);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }
+

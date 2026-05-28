@@ -61,6 +61,33 @@ class MateriController extends Controller
         return redirect()->route('admin.materi.index')->with('success', 'Materi berhasil ditambahkan');
     }
 
+    /**
+     * Handle async file upload untuk video/pdf
+     */
+    public function uploadFile(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:pdf,doc,docx,mp4,mov,avi,webm|max:524288'  // 512 MB
+        ]);
+
+        try {
+            $filePath = $request->file('file')->store('materi', 'public');
+            $fullUrl = asset('storage/' . $filePath);
+            
+            return response()->json([
+                'success' => true,
+                'file_path' => $filePath,
+                'full_url' => $fullUrl,
+                'message' => 'File berhasil diupload'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal upload file: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function edit($id): View
     {
         $materi = Materi::with('kuis')->findOrFail($id);
@@ -109,13 +136,53 @@ class MateriController extends Controller
     public function showLogs($id): View
     {
         // Ambil materi beserta log-nya dan data user (catin) yang mengakses
-        // Asumsi: di model MateriLog ada relasi 'user' atau 'catin'
-        $materi = Materi::with(['logs.user'])->findOrFail($id); 
-        
+        $materi = Materi::with(['logs.user'])->findOrFail($id);
+
         return view('materi.logs-materi', compact('materi'));
     }
 
-    
+    /**
+     * Serve video file - Route khusus untuk handle video yang bisa diakses dengan benar
+     */
+    public function serveVideo($id)
+    {
+        $materi = Materi::findOrFail($id);
+        
+        if (!$materi->file) {
+            abort(404, 'File tidak ditemukan');
+        }
+
+        $filePath = storage_path('app/public/' . $materi->file);
+        
+        if (!file_exists($filePath)) {
+            abort(404, 'File video tidak ditemukan di server');
+        }
+
+        return response()->file($filePath, [
+            'Content-Type' => 'video/mp4',
+            'Content-Disposition' => 'inline; filename="' . basename($filePath) . '"',
+        ]);
+    }
+
+    /**
+     * Download video file
+     */
+    public function downloadVideo($id)
+    {
+        $materi = Materi::findOrFail($id);
+        
+        if (!$materi->file) {
+            abort(404, 'File tidak ditemukan');
+        }
+
+        $filePath = storage_path('app/public/' . $materi->file);
+        
+        if (!file_exists($filePath)) {
+            abort(404, 'File video tidak ditemukan di server');
+        }
+
+        return response()->download($filePath, $materi->judul . '.' . pathinfo($filePath, PATHINFO_EXTENSION));
+    }
     public function manageKuis($id): View
     {
         $materi = Materi::with(['kuis.soals'])->findOrFail($id);
@@ -204,11 +271,90 @@ class MateriController extends Controller
         return redirect()->back()->with('success', 'Soal berhasil diperbarui');
     }
 
-    public function showKuisLogs($id): View
+    public function showKuisLogs($id): View|\Illuminate\Http\RedirectResponse
     {
-        // Mengambil kuis berdasarkan materi_id yang diklik
-        $kuis = Kuis::with(['logs.user'])->where('materi_id', $id)->firstOrFail();
+        // Gunakan first() biasa, jangan firstOrFail()
+        $kuis = Kuis::with(['logs.catin'])->where('materi_id', $id)->first();
+        
+        // VALIDASI: Jika kuis untuk materi tersebut belum ada di database
+        if (!$kuis) {
+            // Balikin ke halaman sebelumnya dengan pesan peringatan alert
+            return redirect()->back()->with('error', 'Kuis untuk materi ini belum dibuat, sehingga log nilai belum tersedia.');
+        }
         
         return view('materi.logs-kuis', compact('kuis'));
+    }
+
+    /**
+     * API endpoint untuk pengambilan log kuis (JSON) agar bisa di-polling realtime oleh frontend
+     */
+    public function apiKuisLogs($id)
+    {
+        $kuis = Kuis::with(['logs.catin'])->where('materi_id', $id)->firstOrFail();
+
+        $payload = $kuis->logs->map(function($log) {
+            $name = $log->nama_peserta ?: (($log->catin?->nama_suami ?? '') . ' / ' . ($log->catin?->nama_istri ?? ''));
+            return [
+                'id' => $log->id,
+                'nama_peserta' => $name,
+                'nilai' => $log->nilai,
+                'waktu' => $log->created_at?->format('H:i') ?? null,
+                'timestamp' => $log->created_at?->toDateTimeString() ?? null,
+            ];
+        });
+
+        return response()->json(['status' => 'success', 'data' => $payload]);
+    }
+
+    // Tambahkan di dalam class MateriController
+
+    public function apiGetMateri()
+    {
+        $materi = Materi::where('status', 'aktif')->get()->map(function($item) {
+            return [
+                'id' => $item->id,
+                'judul' => $item->judul,
+                'deskripsi' => $item->deskripsi,
+                // Jika ada file PDF, kirim URL lengkapnya. Jika tidak, null.
+                'url_pdf' => $item->file ? asset('storage/' . $item->file) : null,
+                // Ambil link video dari kolom baru tadi
+                'url_video' => $item->video_url, 
+            ];
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $materi
+        ]);
+    }
+
+    public function apiGetSoal($materi_id)
+    {
+        try {
+            // Karena di Model Soal sudah ada public function materi(), 
+            // kita bisa langsung cari berdasarkan materi_id di tabel soals.
+            $soals = Soal::where('materi_id', $materi_id)->get();
+
+            // Jika ternyata kamu ingin lewat tabel kuis (sesuai query sebelumnya):
+            /*
+            $soals = Soal::whereHas('kuis', function($q) use ($materi_id) {
+                $q->where('materi_id', $materi_id);
+            })->get();
+            */
+
+            return response()->json([
+                'status' => 'success',
+                'total' => $soals->count(),
+                'data' => $soals
+            ], 200);
+
+        } catch (\Exception $e) {
+            // Ini kuncinya: Menangkap error (misal: kolom tidak ditemukan) 
+            // dan mengubahnya jadi JSON agar Flutter tidak dapet <br />
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengambil soal: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

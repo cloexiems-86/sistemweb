@@ -110,9 +110,11 @@
                         @forelse($history as $item)
                         <tr class="hover:bg-gray-50 transition">
                             <td class="px-6 py-4">
-                                {{-- Memastikan data catin ada agar tidak error --}}
-                                <div class="font-bold text-gray-800">{{ $item->catin->nama_lengkap ?? 'Data Catin Hilang' }}</div>
-                                <div class="text-xs text-gray-400">NIK: {{ $item->catin->nik_suami ?? '-' }}</div>
+                                <div class="font-bold text-gray-800">{{ $item->display_name }}</div>
+                                <div class="text-xs text-gray-400">
+                                    {{ $item->display_peran ? $item->display_peran . ' • ' : '' }}
+                                    NIK: {{ $item->display_nik ?? '-' }}
+                                </div>
                             </td>
                             <td class="px-6 py-4 text-center">
                                 <span class="text-lg font-bold {{ $item->skor >= 70 ? 'text-green-600' : 'text-red-600' }}">
@@ -127,7 +129,7 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-right text-sm text-gray-500">
-                                {{ $item->created_at->translatedFormat('d F Y H:i') }}
+                                {{ optional($item->created_at)->translatedFormat('d F Y H:i') ?? '-' }}
                             </td>
                         </tr>
                         @empty
@@ -244,7 +246,9 @@
     }
 
     function openEditModal(soal) {
-        document.getElementById('formEditSoal').action = `/admin/ujian/soal-master/${soal.id}`;
+        // UBAH BARIS INI: dari soal-master menjadi soal saja
+        document.getElementById('formEditSoal').action = `/admin/ujian/soal/${soal.id}`;
+        
         document.getElementById('edit_pertanyaan').value = soal.pertanyaan;
         document.getElementById('edit_pil_a').value = soal.pil_a;
         document.getElementById('edit_pil_b').value = soal.pil_b;

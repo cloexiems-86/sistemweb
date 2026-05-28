@@ -45,7 +45,17 @@
 
         <div class="content">
             Diberikan kepada:<br>
-            <div class="name">{{ strtoupper($ujian->catin->nama_lengkap) }}</div>
+            @php
+                $person = $person ?? null;
+                if ($person === 'suami') {
+                    $recipient = $ujian->catin->nama_suami;
+                } elseif ($person === 'istri') {
+                    $recipient = $ujian->catin->nama_istri;
+                } else {
+                    $recipient = $ujian->catin->nama_lengkap;
+                }
+            @endphp
+            <div class="name">{{ strtoupper($recipient) }}</div>
             Telah dinyatakan <strong>LULUS</strong> dalam mengikuti kegiatan<br>
             <strong>E-Learning Bimbingan Perkawinan (Bimwin) Digital</strong><br>
             dengan perolehan nilai evaluasi: <strong>{{ $ujian->skor }}</strong>.

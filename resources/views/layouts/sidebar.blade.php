@@ -94,6 +94,18 @@
                 </div>
             </div>
 
+            {{-- Kategori: Laporan --}}
+            <div>
+                <p class="px-4 text-[11px] font-bold text-emerald-200/50 uppercase tracking-widest mb-3">Laporan</p>
+                <div class="flex flex-col gap-1.5">
+                    <a href="{{ route('admin.report.index') }}" 
+                       class="group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 {{ request()->routeIs('admin.report.*') ? 'bg-amber-400 text-[#065f46] shadow-lg shadow-amber-900/20 font-bold' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
+                        <span class="material-symbols-outlined transition-transform group-hover:scale-110">assessment</span>
+                        <span class="text-sm">Laporan Catin</span>
+                    </a>
+                </div>
+            </div>
+
         </nav>
 
     </div>

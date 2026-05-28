@@ -1,4 +1,4 @@
-@extends('layouts.admin') {{-- Sesuaikan dengan layoutmu --}}
+@extends('layouts.app') {{-- Sesuaikan dengan layoutmu --}}
 
 @section('content')
 <div class="p-6">

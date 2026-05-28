@@ -40,10 +40,7 @@
                     <span class="text-2xl font-black">{{ $jumlahSoal }}</span>
                     <span class="text-[10px] uppercase font-bold">Soal</span>
                 </div>
-                <div>
-                    <h4 class="text-lg font-black text-gray-800 dark:text-white uppercase">Status Kuis Sertifikat</h4>
-                    <p class="text-sm text-gray-500">Minimal 10 soal untuk mengaktifkan fitur sertifikat otomatis.</p>
-                </div>
+
             </div>
             @if($jumlahSoal >= 10)
                 <div class="hidden md:flex items-center gap-2 px-5 py-2.5 bg-green-50 text-green-600 rounded-xl font-black text-xs uppercase border border-green-100">

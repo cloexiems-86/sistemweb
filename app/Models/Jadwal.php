@@ -9,13 +9,14 @@ class Jadwal extends Model
     protected $table = 'jadwals';
 
     protected $fillable = [
+        'jenis_jadwal',    // Ditambahkan agar bisa menyimpan jenis kegiatan (Bimbingan/Rapak)
         'tanggal',
         'topik',
         'sesi',
         'fasilitator',
         'status',
-        'lokasi',          // TAMBAHKAN INI agar bisa disimpan
-        'pendamping_id'    // TAMBAHKAN INI agar bisa disimpan
+        'lokasi',          
+        'pendamping_id'    
     ];
 
     /**

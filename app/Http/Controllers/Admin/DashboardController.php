@@ -8,18 +8,30 @@ use App\Models\Jadwal;
 use App\Models\Materi;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // 1. STATS CARDS
-        $totalBimwin = Jadwal::count();
+        // Mengambil jadwal bimbingan perkawinan yang aktif di minggu ini saja
+        $totalBimwin = Jadwal::whereBetween('tanggal', [
+            Carbon::now()->startOfWeek(), 
+            Carbon::now()->endOfWeek()
+        ])->count();
+        
         $totalVideo = Materi::count();
         $totalCatin = Catin::count();
-        $totalSertifikat = Catin::where('status', 'Lulus')->count();
 
-        // 2. CHART DESA
+        // Mengambil jumlah catin unik (distinct) yang sudah lulus/selesai ujian 
+        // PERBAIKAN: Mengubah nama tabel dari 'ujians' menjadi 'ujian'
+        $totalSertifikat = DB::table('ujian')
+            ->where('skor', '>=', 70)
+            ->distinct('catin_id')
+            ->count('catin_id');
+
+        // 2. CHART DESA (Data tetap dihitung agar API Flutter untuk Android Catin tidak error)
         $daftarDesa = [
             'Blimbing', 'Jugo', 'Kedawung', 'Keniten', 'Kranding', 
             'Kraton', 'Maesan', 'Mlati', 'Mojo', 'Mondo', 
@@ -27,9 +39,7 @@ class DashboardController extends Controller
             'Ploso', 'Ponggok', 'Sukoanyar', 'Surat', 'Tambibendo'
         ];
 
-        // Ambil data desa sekaligus (Eager Grouping) untuk menghindari error jika kolom belum siap
-        // Pastikan nama kolom di bawah ini sesuai dengan yang ada di DB (misal: 'desa')
-        $kolomDesa = 'desa_istri'; // Ganti ke 'desa' jika 'desa_istri' belum di-migrate
+        $kolomDesa = 'desa_istri'; 
 
         $dataPerDesa = Catin::select($kolomDesa, DB::raw('count(*) as total'))
             ->whereIn($kolomDesa, $daftarDesa)
@@ -37,14 +47,17 @@ class DashboardController extends Controller
             ->pluck('total', $kolomDesa)
             ->toArray();
 
-        $sertifikatPerDesa = Catin::select($kolomDesa, DB::raw('count(*) as total'))
-            ->where('status', 'Lulus')
-            ->whereIn($kolomDesa, $daftarDesa)
-            ->groupBy($kolomDesa)
-            ->pluck('total', $kolomDesa)
+        // Menyesuaikan logika kueri kelulusan desa dengan data ujian unik
+        // PERBAIKAN: Mengubah seluruh referensi tabel 'ujians' menjadi 'ujian' (pada table, select, join, dan where)
+        $sertifikatPerDesa = DB::table('ujian')
+            ->select('catins.' . $kolomDesa, DB::raw('count(distinct ujian.catin_id) as total'))
+            ->join('catins', 'catins.id', '=', 'ujian.catin_id')
+            ->where('ujian.skor', '>=', 70)
+            ->whereIn('catins.' . $kolomDesa, $daftarDesa)
+            ->groupBy('catins.' . $kolomDesa)
+            ->pluck('total', 'catins.' . $kolomDesa)
             ->toArray();
 
-        $desaLabels = $daftarDesa;
         $desaCatinData = [];
         $desaSertifikatData = [];
 
@@ -58,15 +71,41 @@ class DashboardController extends Controller
         $bulanCatinData = [];
         for ($i = 5; $i >= 0; $i--) {
             $month = Carbon::now()->subMonths($i);
-            $bulanLabels[] = $month->translatedFormat('M'); // Menggunakan translated agar sesuai bahasa Indo
+            $bulanLabels[] = $month->translatedFormat('M'); 
             $bulanCatinData[] = Catin::whereYear('created_at', $month->year)
                                      ->whereMonth('created_at', $month->month)
                                      ->count();
         }
 
+        // --- LOGIKA FIX UNTUK FLUTTER ---
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Data Dashboard Berhasil Diambil',
+                'data' => [
+                    'stats' => [
+                        'totalBimwin' => $totalBimwin,
+                        'totalVideo' => $totalVideo,
+                        'totalCatin' => $totalCatin,
+                        'totalSertifikat' => $totalSertifikat,
+                    ],
+                    'chart_desa' => [
+                        'labels' => $daftarDesa,
+                        'total_catin' => $desaCatinData,
+                        'total_lulus' => $desaSertifikatData,
+                    ],
+                    'trend_registrasi' => [
+                        'labels' => $bulanLabels,
+                        'data' => $bulanCatinData,
+                    ]
+                ]
+            ], 200);
+        }
+
+        // Jika akses lewat browser biasa, tampilkan View Web
         return view('auth.admin-dashboard', compact(
             'totalBimwin', 'totalVideo', 'totalCatin', 'totalSertifikat',
-            'desaLabels', 'desaCatinData', 'desaSertifikatData',
+            'daftarDesa', 'desaCatinData', 'desaSertifikatData',
             'bulanLabels', 'bulanCatinData'
         ));
     }

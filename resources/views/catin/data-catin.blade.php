@@ -197,52 +197,18 @@
                         </span>
                     </td>
 
-                    {{-- TRACKING PROGRES (Real Data) --}}
-                    <td class="px-6 py-5">
-                        <div class="flex flex-col gap-2 min-w-[180px]">
-                            @php
-                                // Logika tracking: sesuaikan dengan field di database Anda
-                                // Asumsi: ada field bimbingan_status, kuis_score, is_lulus
-                                $step = 1;
-                                if($item->is_lulus) { $step = 3; } 
-                                elseif($item->kuis_done) { $step = 2; }
-                            @endphp
-
-                            <div class="flex items-center justify-between text-[9px] font-black uppercase tracking-tighter mb-1">
-                                <span class="{{ $step >= 1 ? 'text-[#4ce619]' : 'text-gray-300' }}">Bimbingan</span>
-                                <span class="{{ $step >= 2 ? 'text-[#4ce619]' : 'text-gray-300' }}">Kuis</span>
-                                <span class="{{ $step >= 3 ? 'text-[#4ce619]' : 'text-gray-300' }}">Sertifikat</span>
-                            </div>
-
-                            <div class="relative w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                <div class="absolute h-full bg-[#4ce619] transition-all duration-1000 shadow-[0_0_8px_#4ce619]" 
-                                     style="width: {{ $step == 3 ? '100' : ($step == 2 ? '66' : '33') }}%"></div>
-                            </div>
-
-                            <div class="flex items-center gap-1 mt-1">
-                                @if($item->is_lulus)
-                                    <span class="flex items-center gap-1 text-[10px] font-bold text-[#4ce619]">
-                                        <span class="material-symbols-outlined text-[14px]">workspace_premium</span> LULUS
-                                    </span>
-                                @else
-                                    <span class="text-[10px] font-bold text-amber-500 flex items-center gap-1">
-                                        <span class="material-symbols-outlined text-[14px] animate-spin">sync</span> SEDANG PROSES
-                                    </span>
-                                @endif
-                            </div>
-                        </div>
-                    </td>
+                    {{-- LIHAT PASANGAN
+                    <td class="px-6 py-5 text-center">
+                        <a href="{{ route('admin.catin.show', $item->id) }}" 
+                            class="inline-flex items-center gap-2 px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold hover:bg-indigo-100">
+                            <span class="material-symbols-outlined">person</span>
+                            Lihat Pasangan
+                        </a>
+                    </td> --}}
 
                     {{-- AKSI --}}
                     <td class="px-6 py-5 text-center">
                         <div class="flex justify-center items-center gap-1">
-                            {{-- TOMBOL BARU: LIHAT DETAIL PROGRES --}}
-                            <a href="{{ route('admin.catin.show', $item->id) }}"
-                                class="w-9 h-9 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white rounded-xl transition-all shadow-sm hover:shadow-blue-200"
-                                title="Lihat Progres">
-                                <span class="material-symbols-outlined text-[20px]">visibility</span>
-                            </a>
-
                             <a href="{{ route('admin.catin.edit', $item->id) }}"
                                 class="w-9 h-9 flex items-center justify-center text-amber-500 hover:bg-amber-500 hover:text-white rounded-xl transition-all shadow-sm hover:shadow-amber-200"
                                 title="Edit Data">

@@ -60,18 +60,23 @@
 
                     {{-- NIP --}}
                     <div class="md:col-span-1">
-                        <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">NIP (Wajib 16 Digit)</label>
+                        <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">NIP (Wajib 16 Digit & Unik)</label>
                         <div class="relative mt-1">
                             <span class="material-symbols-outlined absolute left-3 top-2.5 text-gray-400 text-sm">fingerprint</span>
                             <input type="text" name="nip" id="nip" value="{{ old('nip') }}" required
                                 maxlength="16"
                                 oninput="this.value = this.value.replace(/[^0-9]/g, ''); validateNIP(this);"
+                                onblur="checkNIPUnique(this)"
                                 class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#4ce619]/20 focus:border-[#4ce619] outline-none transition-all font-bold text-gray-700"
                                 placeholder="Masukkan 16 digit NIP">
                         </div>
-                        {{-- Pesan Peringatan NIP --}}
+                        {{-- Pesan Peringatan NIP Format --}}
                         <p id="nip-warning" class="hidden text-[10px] font-bold text-red-500 mt-2 flex items-center gap-1">
                             <span class="material-symbols-outlined text-xs">warning</span> NIP harus tepat 16 digit! (Saat ini: <span id="nip-count">0</span>)
+                        </p>
+                        {{-- Pesan Peringatan NIP Sudah Terdaftar --}}
+                        <p id="nip-exists-warning" class="hidden text-[10px] font-bold text-red-500 mt-2 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-xs">warning</span> NIP ini sudah terdaftar dalam sistem!
                         </p>
                     </div>
                 </div>
@@ -88,25 +93,35 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {{-- EMAIL --}}
                     <div class="md:col-span-1">
-                        <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Alamat Email</label>
+                        <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Alamat Email (Unik)</label>
                         <div class="relative mt-1">
                             <span class="material-symbols-outlined absolute left-3 top-2.5 text-gray-400 text-sm">mail</span>
-                            <input type="email" name="email" value="{{ old('email') }}" required
+                            <input type="email" name="email" id="email" value="{{ old('email') }}" required
+                                onblur="checkEmailUnique(this)"
                                 class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#4ce619]/20 focus:border-[#4ce619] outline-none transition-all font-bold text-gray-700"
                                 placeholder="pendamping@kua.com">
                         </div>
+                        {{-- Pesan Email Sudah Terdaftar --}}
+                        <p id="email-exists-warning" class="hidden text-[10px] font-bold text-red-500 mt-2 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-xs">warning</span> Email ini sudah terdaftar dalam sistem!
+                        </p>
                     </div>
 
                     {{-- NO HP --}}
                     <div class="md:col-span-1">
-                        <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Nomor WhatsApp</label>
+                        <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Nomor WhatsApp (Unik)</label>
                         <div class="relative mt-1">
                             <span class="material-symbols-outlined absolute left-3 top-2.5 text-gray-400 text-sm">call</span>
-                            <input type="text" name="no_hp" value="{{ old('no_hp') }}"
+                            <input type="text" name="no_hp" id="no_hp" value="{{ old('no_hp') }}"
                                 oninput="this.value = this.value.replace(/[^0-9]/g, '');"
+                                onblur="checkWhatsAppUnique(this)"
                                 class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#4ce619]/20 focus:border-[#4ce619] outline-none transition-all font-bold text-gray-700"
                                 placeholder="08xxxxxxxxxx">
                         </div>
+                        {{-- Pesan WhatsApp Sudah Terdaftar --}}
+                        <p id="whatsapp-exists-warning" class="hidden text-[10px] font-bold text-red-500 mt-2 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-xs">warning</span> Nomor WhatsApp ini sudah terdaftar dalam sistem!
+                        </p>
                     </div>
 
                     {{-- PASSWORD --}}
@@ -177,6 +192,114 @@
         }
     }
 
+    // Fungsi Check NIP Sudah Terdaftar (Validasi Unik)
+    async function checkNIPUnique(input) {
+        if (input.value.length !== 16) {
+            return;
+        }
+
+        const warning = document.getElementById('nip-exists-warning');
+        const nipInput = document.getElementById('nip');
+        const submitBtn = document.getElementById('submitBtn');
+
+        try {
+            const response = await fetch('{{ route("admin.pendamping.checkNip") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ nip: input.value })
+            });
+
+            const data = await response.json();
+
+            if (data.exists) {
+                warning.classList.remove('hidden');
+                nipInput.classList.add('border-red-500', 'focus:ring-red-200');
+                submitBtn.disabled = true;
+            } else {
+                warning.classList.add('hidden');
+                nipInput.classList.remove('border-red-500', 'focus:ring-red-200');
+                submitBtn.disabled = false;
+            }
+        } catch (error) {
+            console.error('Error checking NIP:', error);
+        }
+    }
+
+    // Fungsi Check Email Sudah Terdaftar (Validasi Unik)
+    async function checkEmailUnique(input) {
+        if (!input.value) {
+            return;
+        }
+
+        const warning = document.getElementById('email-exists-warning');
+        const emailInput = document.getElementById('email');
+        const submitBtn = document.getElementById('submitBtn');
+
+        try {
+            const response = await fetch('{{ route("admin.pendamping.checkEmail") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ email: input.value })
+            });
+
+            const data = await response.json();
+
+            if (data.exists) {
+                warning.classList.remove('hidden');
+                emailInput.classList.add('border-red-500', 'focus:ring-red-200');
+                submitBtn.disabled = true;
+            } else {
+                warning.classList.add('hidden');
+                emailInput.classList.remove('border-red-500', 'focus:ring-red-200');
+                submitBtn.disabled = false;
+            }
+        } catch (error) {
+            console.error('Error checking email:', error);
+        }
+    }
+
+    // Fungsi Check WhatsApp Sudah Terdaftar (Validasi Unik)
+    async function checkWhatsAppUnique(input) {
+        if (!input.value) {
+            return;
+        }
+
+        const warning = document.getElementById('whatsapp-exists-warning');
+        const noHpInput = document.getElementById('no_hp');
+        const submitBtn = document.getElementById('submitBtn');
+
+        try {
+            const response = await fetch('{{ route("admin.pendamping.checkWhatsapp") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ no_hp: input.value })
+            });
+
+            const data = await response.json();
+
+            if (data.exists) {
+                warning.classList.remove('hidden');
+                noHpInput.classList.add('border-red-500', 'focus:ring-red-200');
+                submitBtn.disabled = true;
+            } else {
+                warning.classList.add('hidden');
+                noHpInput.classList.remove('border-red-500', 'focus:ring-red-200');
+                submitBtn.disabled = false;
+            }
+        } catch (error) {
+            console.error('Error checking WhatsApp:', error);
+        }
+    }
+
     // Script Status Toggle
     function setStatus(val) {
         document.getElementById('status_input').value = val;
@@ -198,6 +321,9 @@
         if (nip.length !== 16) {
             e.preventDefault();
             alert('NIP harus tepat 16 digit angka!');
+        }
+    };
+</script>
         }
     };
 </script>

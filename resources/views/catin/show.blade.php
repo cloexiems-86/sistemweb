@@ -18,6 +18,14 @@
                 <div>
                     <h1 class="text-2xl font-black text-gray-800 uppercase">{{ $item->nama_suami }} & {{ $item->nama_istri }}</h1>
                     <p class="text-gray-500 font-medium italic">ID Registrasi: #{{ $item->id }}{{ $item->created_at->format('Ymd') }}</p>
+                    <div class="mt-3 flex gap-2">
+                        @if($item->ujian && $item->ujian->status_kelulusan === 'lulus' && $item->ujian->skor >= 70)
+                            <a href="{{ route('admin.sertifikat.download', [$item->ujian->id, 'suami']) }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold">Cetak Sertifikat Suami</a>
+                            <a href="{{ route('admin.sertifikat.download', [$item->ujian->id, 'istri']) }}" class="px-4 py-2 bg-pink-600 text-white rounded-lg text-xs font-bold">Cetak Sertifikat Istri</a>
+                        @else
+                            <span class="text-xs text-gray-400">Sertifikat belum tersedia (skor < 70)</span>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>

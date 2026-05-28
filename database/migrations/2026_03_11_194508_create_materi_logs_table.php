@@ -9,19 +9,20 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-        Schema::create('materi_logs', function (Blueprint $table) {
+public function up(): void
+{
+    Schema::create('materi_logs', function (Blueprint $table) {
+        $table->id();
+        $table->unsignedBigInteger('catin_id');
+        $table->unsignedBigInteger('materi_id');
+        $table->string('peran'); // Untuk menyimpan 'suami' atau 'istri'
+        $table->timestamps(); // Ini otomatis membuat created_at dan updated_at
 
-            $table->id();
-
-            $table->unsignedBigInteger('catin_id');
-            $table->unsignedBigInteger('materi_id');
-
-            $table->timestamp('accessed_at')->useCurrent();
-
-        });
-    }
+        // Opsional: Tambahkan foreign key agar data lebih aman
+        $table->foreign('catin_id')->references('id')->on('catins')->onDelete('cascade');
+        $table->foreign('materi_id')->references('id')->on('materis')->onDelete('cascade');
+    });
+}
 
     /**
      * Reverse the migrations.

@@ -15,8 +15,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/profile', [CatinApiController::class, 'profile']);
         Route::post('/update-profile', [CatinApiController::class, 'updateProfile']);
         Route::get('/materi', [CatinApiController::class, 'getMateri']);
+        Route::get('/jadwal', [CatinApiController::class, 'getJadwal']);
         Route::post('/absensi', [CatinApiController::class, 'absensi']);
         Route::get('/progres', [CatinApiController::class, 'checkProgres']); // Syarat skor > 70
+        Route::get('/catin/materi-log', [CatinApiController::class, 'getMateriLog']);
+        Route::post('/catin/update-materi-log', [CatinApiController::class, 'updateMateriLog']);
+        Route::prefix('catin')->group(function () {
+        // ... route yang sudah ada ...
+            Route::get('/konsultasi', [CatinApiController::class, 'getKonsultasi']);
+            Route::post('/konsultasi', [CatinApiController::class, 'kirimKonsultasi']);
+        });
     });
 
     // API Khusus Pendamping (Flutter)

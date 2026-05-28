@@ -139,57 +139,79 @@
                 @forelse ($materi as $item)
                 <tr class="group hover:bg-[#4ce619]/5 dark:hover:bg-[#4ce619]/5 transition-all duration-300 {{ $item->status == 'nonaktif' ? 'bg-gray-50/50 dark:bg-dark-surface/50' : '' }}">
                     
-                    {{-- MATERI --}}
-                    <td class="px-6 py-5">
-                        <div class="flex items-center gap-4">
+                {{-- MATERI --}}
+                <td class="px-6 py-5">
+                    <div class="flex items-center gap-4">
+                            {{-- Logika Cek Ekstensi --}}
+                            @php
+                                $extension = pathinfo($item->file, PATHINFO_EXTENSION);
+                                $isVideo = in_array(strtolower($extension), ['mp4', 'webm', 'ogg']);
+                            @endphp
+
                             <div class="bg-[#4ce619]/10 dark:bg-[#4ce619]/20 rounded-2xl p-3 {{ $item->status == 'aktif' ? 'group-hover:rotate-6 group-hover:scale-110' : 'opacity-50' }} transition-all">
-                                <span class="material-symbols-outlined text-[#4ce619]">description</span>
+                                {{-- Ikon berubah jika video --}}
+                                <span class="material-symbols-outlined text-[#4ce619]">
+                                    {{ $isVideo ? 'movie' : 'description' }}
+                                </span>
                             </div>
+
                             <div class="flex flex-col">
                                 <span class="font-black text-gray-800 dark:text-white uppercase text-sm tracking-tight leading-none mb-1">
                                     {{ $item->judul }}
                                 </span>
+                                
                                 <div class="flex items-center gap-1 opacity-60 mb-1 dark:text-gray-400">
                                     <span class="material-symbols-outlined text-[12px]">calendar_today</span>
                                     <p class="text-[10px] font-medium">Rilis: {{ optional($item->created_at)->translatedFormat('d M Y') }}</p>
                                 </div>
-                                <p class="text-[10px] text-gray-400 truncate max-w-[250px] italic">
+
+                            <p class="text-[10px] text-gray-400 truncate max-w-[250px] italic">
                                     "{{ Str::limit($item->deskripsi, 60) }}"
-                                </p>
+                            </p>
                             </div>
                         </div>
-                    </td>
+                    </div>
+                </td>
 
-                    {{-- STATUS & FILE --}}
-                    <td class="px-6 py-5">
-                        <div class="flex flex-col gap-2">
-                            @if($item->status == 'aktif')
-                                <span class="w-fit px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-[9px] font-black uppercase rounded-full border border-green-200 dark:border-green-800 inline-flex items-center gap-1">
-                                    <span class="w-1 h-1 rounded-full bg-green-600 animate-pulse"></span> Aktif
-                                </span>
-                            @else
-                                <span class="w-fit px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-400 text-[9px] font-black uppercase rounded-full border border-gray-200 dark:border-gray-700 inline-flex items-center gap-1">
-                                    <span class="w-1 h-1 rounded-full bg-gray-400"></span> Diarsipkan
-                                </span>
-                            @endif
+                {{-- STATUS & FILE --}}
+                <td class="px-6 py-5">
+                    <div class="flex flex-col gap-2">
+                        {{-- Status Badge --}}
+                        @if($item->status == 'aktif')
+                            <span class="w-fit px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-[9px] font-black uppercase rounded-full border border-green-200 dark:border-green-800 inline-flex items-center gap-1">
+                                <span class="w-1 h-1 rounded-full bg-green-600 animate-pulse"></span> Aktif
+                            </span>
+                        @else
+                            <span class="w-fit px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-400 text-[9px] font-black uppercase rounded-full border border-gray-200 dark:border-gray-700 inline-flex items-center gap-1">
+                                <span class="w-1 h-1 rounded-full bg-gray-400"></span> Diarsipkan
+                            </span>
+                        @endif
 
                             @if($item->file)
-                                <a href="{{ asset('storage/'.$item->file) }}" target="_blank"
+                            @if($isVideo)
+                                {{-- Jika Video: Gunakan endpoint serveVideo untuk reliability --}}
+                                <button type="button" onclick="previewVideo('{{ route('admin.materi.serveVideo', $item->id, false) }}', '{{ $item->judul }}', '{{ $item->id }}')"
+                                    class="inline-flex items-center gap-1 text-purple-500 dark:text-purple-400 text-[10px] font-black uppercase hover:underline group/file">
+                                    <span class="material-symbols-outlined text-[14px] group-hover/file:scale-110 transition-transform">play_circle</span> Putar Video
+                                </button>
+                            @else
+                                {{-- Jika Dokumen (PDF/Lainnya): Tetap buka tab baru --}}
+                                <a href="{{ route('materi.display', $item->id) }}" target="_blank"
                                     class="inline-flex items-center gap-1 text-blue-500 dark:text-blue-400 text-[10px] font-black uppercase hover:underline group/file">
                                     <span class="material-symbols-outlined text-[14px] group-hover/file:translate-x-0.5 transition-transform">visibility</span> Lihat Dokumen
                                 </a>
-                            @else
-                                <span class="text-gray-300 dark:text-gray-600 text-[10px] font-black uppercase italic">Tanpa Lampiran</span>
                             @endif
-                            {{-- TAMBAHKAN INI --}}
-                            <div class="flex items-center gap-1 text-[10px] font-bold text-gray-500 uppercase">
-                                <span class="material-symbols-outlined text-[14px]">visibility</span>
-                                <span>{{ $item->logs_count }} Catin Mempelajari</span>
-                            </div>
+                        @else
+                            <span class="text-gray-300 dark:text-gray-600 text-[10px] font-black uppercase italic">Tanpa Lampiran</span>
+                        @endif
 
-
+                        {{-- Monitoring Logs --}}
+                        <div class="flex items-center gap-1 text-[10px] font-bold text-gray-500 uppercase">
+                            <span class="material-symbols-outlined text-[14px]">visibility</span>
+                            <span>{{ $item->logs_count }} Catin Mempelajari</span>
                         </div>
-                    </td>
+                    </div>
+                </td>
 
                     {{-- KELOLA KUIS --}}
                     <td class="px-6 py-5 text-center">
@@ -255,7 +277,7 @@
     </div>
 
     @if ($materi->hasPages())
-    <div class="p-6 border-t border-gray-100 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-800/30 flex justify-center items-center">
+    <div clas="p-6 border-t border-gray-100 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-800/30 flex justify-center items-center">
         {{ $materi->links('partials.pagination') }}
     </div>
     @endif
@@ -317,9 +339,107 @@
                 row.style.display = "none";
             }
         });
-
         // Optional: Tampilkan baris "Tidak ditemukan" jika search kosong
     });
+
+    // PERBAIKAN: Fungsi previewVideo dikeluarkan dari listener search agar bisa dipanggil global
+    function normalizeUrl(url) {
+        try {
+            const parsed = new URL(url, window.location.origin);
+            if (parsed.protocol !== window.location.protocol || parsed.host !== window.location.host) {
+                return `${window.location.protocol}//${window.location.host}${parsed.pathname}${parsed.search}${parsed.hash}`;
+            }
+            return parsed.href;
+        } catch (error) {
+            return url;
+        }
+    }
+
+    function previewVideo(url, title, materId) {
+        url = normalizeUrl(url);
+        console.log('Playing video from endpoint:', url);
+        
+        // Buat download URL dengan protokol yang benar (HTTPS jika perlu)
+        const downloadUrl = normalizeUrl(url.replace('/video', '/download'));
+        
+        Swal.fire({
+            title: `<span class="font-black uppercase text-lg text-gray-800">${title}</span>`,
+            html: `
+                <div class="mt-4 overflow-hidden rounded-2xl shadow-inner bg-black flex items-center justify-center">
+                    <video id="swalVideo" width="100%" height="auto" controls style="max-width: 100%; max-height: 500px;">
+                        <source src="${url}" type="video/mp4">
+                        Browser Anda tidak mendukung pemutaran video.
+                    </video>
+                </div>
+                <div class="mt-4 flex gap-2 justify-center">
+                    <button type="button" onclick="downloadVideo('${downloadUrl}', '${title}')"
+                       class="px-6 py-2 bg-blue-500 text-white font-bold rounded-lg hover:bg-blue-600 transition-all active:scale-95 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">download</span>
+                        Download Video
+                    </button>
+                </div>
+            `,
+            showCloseButton: true,
+            showConfirmButton: false,
+            width: '900px',
+            didOpen: (modal) => {
+                setTimeout(() => {
+                    const video = document.getElementById('swalVideo');
+                    if (video) {
+                        console.log('Video element ready, attempting to play');
+                        video.play().catch(err => {
+                            console.warn('Autoplay warning:', err.message);
+                        });
+                        video.load();
+                    }
+                }, 300);
+            },
+            didClose: (modal) => {
+                const video = document.getElementById('swalVideo');
+                if (video) video.pause();
+            },
+            background: '#ffffff',
+            borderRadius: '24px',
+            padding: '1.5rem',
+            allowOutsideClick: true,
+            allowEscapeKey: true,
+        });
+    }
+
+    // Fungsi untuk download dengan fetch API yang lebih aman
+    function downloadVideo(url, title) {
+        console.log('Downloading from:', url);
+        
+        fetch(url, { credentials: 'same-origin' })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                // Buat blob URL
+                const blobUrl = window.URL.createObjectURL(blob);
+                
+                // Buat element <a> untuk download
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = title + '.mp4'; // Nama file dengan extension
+                document.body.appendChild(a);
+                a.click();
+                
+                // Cleanup
+                window.URL.revokeObjectURL(blobUrl);
+                document.body.removeChild(a);
+                
+                console.log('Download started:', title);
+            })
+            .catch(error => {
+                console.error('Download error:', error);
+                alert('Gagal download video: ' + error.message);
+            });
+    }
+    
 </script>
 
 @endsection

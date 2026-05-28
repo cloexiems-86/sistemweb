@@ -53,23 +53,23 @@
                     <td class="px-6 py-5">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-[#4ce619] to-green-300 flex items-center justify-center text-white font-bold">
-                                {{ substr($log->user->name ?? 'C', 0, 1) }}
+                                {{ substr($log->nama_peserta ?? 'C', 0, 1) }}
                             </div>
                             <div>
                                 <p class="font-black text-gray-800 dark:text-white text-sm uppercase leading-none mb-1">
-                                    {{ $log->user->name ?? 'Catin Tidak Ditemukan' }}
+                                    {{ $log->nama_peserta ?? 'Catin Tidak Ditemukan' }}
                                 </p>
-                                <p class="text-[10px] text-gray-400 font-medium">{{ $log->user->email ?? '-' }}</p>
+                                <p class="text-[10px] text-gray-400 font-medium">{{ $log->email_peserta ?? '-' }}</p>
                             </div>
                         </div>
                     </td>
                     <td class="px-6 py-5">
                         <div class="flex flex-col">
                             <span class="text-sm font-bold text-gray-700 dark:text-gray-300">
-                                {{ $log->created_at->translatedFormat('d F Y') }}
+                                {{ optional($log->created_at)->translatedFormat('d F Y') ?? '-' }}
                             </span>
                             <span class="text-[10px] text-gray-400 uppercase font-black tracking-tighter">
-                                Pukul {{ $log->created_at->format('H:i') }} WIB
+                                Pukul {{ optional($log->created_at)->format('H:i') ?? '-' }} WIB
                             </span>
                         </div>
                     </td>

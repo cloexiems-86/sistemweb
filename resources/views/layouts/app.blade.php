@@ -52,6 +52,28 @@
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #065f4633; border-radius: 10px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #065f4666; }
     </style>
+    <style>
+      /* Pembesaran tampilan untuk sidang proyektor (10-15%) */
+      :root{
+        --proyeksi-scale: 1.12; /* ~12% (ubah ke 1.10 atau 1.15 bila perlu) */
+      }
+
+      /* Primary: zoom (paling mudah untuk ikut membesarkan layout termasuk padding) */
+      html, body{
+        zoom: var(--proyeksi-scale);
+      }
+
+      /* Fallback: scale (untuk browser yang tidak mendukung zoom) */
+      @supports not (zoom: 1){
+        body{
+          transform: scale(var(--proyeksi-scale));
+          transform-origin: top left;
+          width: calc(100% / var(--proyeksi-scale));
+          height: calc(100% / var(--proyeksi-scale));
+          overflow-x: hidden; /* cegah horizontal spill */
+        }
+      }
+    </style>
 </head>
 
 <body class="bg-background-light dark:bg-background-dark font-display text-slate-800 dark:text-emerald-50 transition-colors duration-300">

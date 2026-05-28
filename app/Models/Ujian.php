@@ -16,6 +16,8 @@ class Ujian extends Model
     // Kolom yang boleh diisi secara massal (Mass Assignment)
     protected $fillable = [
         'catin_id',
+        'nama_peserta',
+        'person',
         'skor',
         'jawaban_benar',
         'jawaban_salah',
@@ -26,10 +28,51 @@ class Ujian extends Model
      * Relasi ke model Catin
      * Satu hasil ujian dimiliki oleh satu Catin
      */
-    // app/Models/Ujian.php
     public function catin()
     {
-        // Pastikan foreign key-nya benar (misal: catin_id atau id_catin)
         return $this->belongsTo(Catin::class, 'catin_id'); 
+    }
+
+    public function getDisplayNameAttribute(): string
+    {
+        if ($this->nama_peserta) {
+            return $this->nama_peserta;
+        }
+
+        if ($this->person === 'suami') {
+            return $this->catin?->nama_suami ?? ($this->catin?->nama_lengkap ?? 'Catin Tidak Ditemukan');
+        }
+
+        if ($this->person === 'istri') {
+            return $this->catin?->nama_istri ?? ($this->catin?->nama_lengkap ?? 'Catin Tidak Ditemukan');
+        }
+
+        return $this->catin?->nama_lengkap ?? 'Catin Tidak Ditemukan';
+    }
+
+    public function getDisplayNikAttribute(): ?string
+    {
+        if ($this->person === 'suami') {
+            return $this->catin?->nik_suami;
+        }
+
+        if ($this->person === 'istri') {
+            return $this->catin?->nik_istri;
+        }
+
+        return $this->catin?->nik_suami ?? $this->catin?->nik_istri;
+    }
+
+    public function getDisplayPeranAttribute(): ?string
+    {
+        if ($this->person === 'suami') {
+            return 'Suami';
+        }
+
+        if ($this->person === 'istri') {
+            return 'Istri';
+        }
+
+        return $this->person ? ucfirst($this->person) : null;
     }
 }

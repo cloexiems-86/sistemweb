@@ -85,7 +85,15 @@
                                 </div>
                                 <div>
                                     <div class="font-black uppercase text-sm text-gray-800 tracking-tight">
-                                        {{ $data->catin->nama_lengkap }}
+                                        @if(isset($data->person) && in_array($data->person, ['suami','istri']))
+                                            @if($data->person === 'suami')
+                                                {{ $data->catin->nama_suami }} <span class="text-xs font-medium text-gray-400">(Suami)</span>
+                                            @else
+                                                {{ $data->catin->nama_istri }} <span class="text-xs font-medium text-gray-400">(Istri)</span>
+                                            @endif
+                                        @else
+                                            {{ $data->catin->nama_lengkap }}
+                                        @endif
                                     </div>
                                     <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                                         ID: #{{ str_pad($data->catin->id, 4, '0', STR_PAD_LEFT) }}
@@ -116,11 +124,31 @@
 
                         {{-- AKSI --}}
                         <td class="px-8 py-6 text-center">
-                            <a href="{{ route('admin.sertifikat.download', $data->id) }}" 
-                               class="inline-flex items-center gap-2 px-6 py-2.5 bg-gray-900 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-green-600 hover:-translate-y-1 hover:shadow-lg hover:shadow-green-200 transition-all duration-300">
-                                <span class="material-symbols-outlined text-sm">print</span>
-                                Cetak Sertifikat
-                            </a>
+                            <div class="inline-flex gap-2">
+                                @if($data->skor >= 70)
+                                    @if(isset($data->person) && in_array($data->person, ['suami','istri']))
+                                        <a href="{{ route('admin.sertifikat.download', [$data->id, $data->person]) }}" 
+                                           class="inline-flex items-center gap-2 px-6 py-2 bg-green-600 text-white text-xs font-black uppercase tracking-widest rounded-lg hover:bg-green-700 transition-all">
+                                            <span class="material-symbols-outlined text-sm">print</span>
+                                            Cetak Sertifikat {{ strtoupper($data->person) }}
+                                        </a>
+                                    @else
+                                        <a href="{{ route('admin.sertifikat.download', [$data->id, 'suami']) }}" 
+                                           class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-lg hover:bg-blue-700 transition-all">
+                                            <span class="material-symbols-outlined text-sm">print</span>
+                                            Suami
+                                        </a>
+
+                                        <a href="{{ route('admin.sertifikat.download', [$data->id, 'istri']) }}" 
+                                           class="inline-flex items-center gap-2 px-4 py-2 bg-pink-600 text-white text-xs font-black uppercase tracking-widest rounded-lg hover:bg-pink-700 transition-all">
+                                            <span class="material-symbols-outlined text-sm">print</span>
+                                            Istri
+                                        </a>
+                                    @endif
+                                @else
+                                    <span class="text-xs text-gray-400 font-black">Skor belum memenuhi syarat</span>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                     @empty

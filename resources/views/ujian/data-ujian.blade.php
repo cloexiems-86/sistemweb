@@ -36,11 +36,11 @@
         </select>
 
         {{-- EXPORT --}}
-        <a href="#" class="px-4 py-2.5 bg-green-600 text-white rounded-xl text-sm font-bold hover:bg-green-700">
+        <a href="{{ route('admin.ujian.export.excel') }}" class="px-4 py-2.5 bg-green-600 text-white rounded-xl text-sm font-bold hover:bg-green-700">
             Export Excel
         </a>
 
-        <a href="#" class="px-4 py-2.5 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700">
+        <a href="{{ route('admin.ujian.export.pdf') }}" class="px-4 py-2.5 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700">
             Export PDF
         </a>
 
@@ -100,7 +100,7 @@
         <table class="w-full text-left">
             <thead class="bg-gray-50 text-[11px] uppercase text-gray-400 font-black tracking-widest">
                 <tr>
-                    <th class="px-6 py-4">Data Catin</th>
+                    <th class="px-6 py-4">Peserta Ujian</th>
                     <th class="px-6 py-4">Pendamping</th>
                     <th class="px-6 py-4 text-center">Skor</th>
                     <th class="px-6 py-4 text-center">Status</th>
@@ -123,18 +123,19 @@
                     </tr>
                     @endif
 
-                    {{-- CATIN --}}
+                    {{-- PESERTA UJIAN --}}
                     <td class="px-6 py-5">
                         <div class="flex items-center gap-4">
-                            <img src="https://ui-avatars.com/api/?name={{ $ujian->catin->nama_suami }}&background=0D8ABC&color=fff"
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode($ujian->display_name) }}&background=0D8ABC&color=fff"
                                  class="w-12 h-12 rounded-xl"/>
 
                             <div>
                                 <div class="font-black uppercase text-sm">
-                                    {{ $ujian->catin->nama_suami }}
+                                    {{ $ujian->display_name }}
                                 </div>
                                 <div class="text-[10px] text-gray-400">
-                                    ID: {{ $ujian->catin->id }}
+                                    {{ $ujian->display_peran ? $ujian->display_peran . ' • ' : '' }}
+                                    NIK: {{ $ujian->display_nik ?? '-' }}
                                 </div>
                             </div>
                         </div>
@@ -143,7 +144,7 @@
                     {{-- PENDAMPING --}}
                     <td class="px-6 py-5">
                         <span class="text-sm text-gray-600">
-                            {{ $ujian->catin->pendamping->nama ?? 'Tanpa Pendamping' }}
+                            {{ $ujian->catin->pendamping_assigned ?? 'Tanpa Pendamping' }}
                         </span>
                     </td>
 
