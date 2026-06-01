@@ -5,8 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Pendamping;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\View\View; // Memperbaiki error return type
-use Illuminate\Http\RedirectResponse; // Memperbaiki return type redirect
+use Illuminate\View\View; 
+use Illuminate\Http\RedirectResponse; 
+use Illuminate\Support\Facades\Http; // Tambahan wajib untuk memanggil API Fonnte
 
 class PendampingController extends Controller
 {
@@ -46,6 +47,7 @@ class PendampingController extends Controller
             'status'   => 'required|in:aktif,nonaktif'
         ]);
 
+        // Simpan ke Database
         Pendamping::create([
             'nama'     => $request->nama,
             'nip'      => $request->nip,
@@ -55,9 +57,46 @@ class PendampingController extends Controller
             'status'   => $request->status,
         ]);
 
+        // ==========================================
+        // PROSES KIRIM WHATSAPP VIA FONNTE
+        // ==========================================
+        $pesanWa = "Halo Bapak/Ibu *{$request->nama}*,\n\n";
+        $pesanWa .= "Anda telah berhasil didaftarkan sebagai Pendamping / Pembimbing dalam sistem E-Learning Bimbingan Perkawinan KUA Mojo.\n\n";
+        $pesanWa .= "Berikut adalah detail akses akun Anda untuk login ke sistem:\n";
+        $pesanWa .= "Email Login: *{$request->email}*\n"; // Menggunakan Email karena tidak ada field username
+        $pesanWa .= "Password: *{$request->password}*\n\n"; // Menggunakan password asli dari inputan
+        $pesanWa .= "Silakan gunakan akun ini untuk masuk melalui portal Web Admin KUA Mojo.\n";
+        $pesanWa .= "Mohon untuk menjaga kerahasiaan data akun Anda demi keamanan bersama. Terima kasih.";
+
+        $pesanFlash = 'Data pendamping berhasil ditambahkan';
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => env('FONNTE_TOKEN'),
+            ])->post('https://api.fonnte.com/send', [
+                'target' => $request->no_hp,
+                'message' => $pesanWa,
+                'countryCode' => '62',
+            ]);
+
+            $responFonnte = $response->json();
+            
+            if (isset($responFonnte['status']) && $responFonnte['status'] == true) {
+                $pesanFlash = 'Data Pendamping berhasil disimpan dan notifikasi akun telah dikirim via WhatsApp!';
+            } else {
+                $pesanFlash = 'Data tersimpan, tapi WhatsApp gagal dikirim: ' . ($responFonnte['reason'] ?? 'Error API');
+            }
+        } catch (\Exception $e) {
+            // PERBAIKAN DIAGNOSTIK: Menampilkan detail pesan error asli dari jaringan server
+            $pesanFlash = 'Data tersimpan, tetapi gagal terhubung ke Fonnte. Detail: ' . $e->getMessage();
+        }
+        // ==========================================
+        // END PROSES FONNTE
+        // ==========================================
+
         return redirect()
             ->route('admin.pendamping.index')
-            ->with('success', 'Data pendamping berhasil ditambahkan');
+            ->with('success', $pesanFlash);
     }
 
     // ======================

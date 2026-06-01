@@ -6,8 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class Absensi extends Model
 {
-    protected $table = 'absensis'; // Sesuaikan dengan nama tabel di database kamu
-    protected $fillable = ['user_id', 'jadwal_id', 'status'];
+    protected $table = 'absensis';
+
+    protected $fillable = [
+        'user_id',
+        'jadwal_id',
+        'status',
+        'peserta'
+    ];
 
     public function user()
     {

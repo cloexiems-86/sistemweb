@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\CatinController;
 use App\Http\Controllers\PendampingController;
@@ -14,13 +15,13 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\AbsensiController;
 use App\Http\Controllers\Admin\KuisController; 
+use App\Http\Controllers\ReminderController; // Ditambahkan untuk fitur notifikasi H-7
 
 // --- LANDING PAGE ---
 Route::get('/', function () {
     return view('landing');
 })->name('landing');
 
-// Tambahkan di baris setelah landing page
 Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
 
 // PUBLIC ROUTE FOR SERTIFIKAT APP
@@ -37,44 +38,28 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware(['auth', 'IsAdmin'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-        // ... di dalam Route::middleware(['auth', 'IsAdmin'])->group(function () {
-
         // Resource Materi tetap seperti biasa
-    Route::resource('materi', MateriController::class);
-    Route::post('/materi/upload-file', [MateriController::class, 'uploadFile'])->name('materi.uploadFile');
-    Route::get('/materi/{id}/video', [MateriController::class, 'serveVideo'])->name('materi.serveVideo');
-    Route::get('/materi/{id}/download', [MateriController::class, 'downloadVideo'])->name('materi.downloadVideo');
+        Route::resource('materi', MateriController::class);
+        Route::post('/materi/upload-file', [MateriController::class, 'uploadFile'])->name('materi.uploadFile');
+        Route::get('/materi/{id}/video', [MateriController::class, 'serveVideo'])->name('materi.serveVideo');
+        Route::get('/materi/{id}/download', [MateriController::class, 'downloadVideo'])->name('materi.downloadVideo');
 
-    // FIX ERROR: admin.materi.kuis.manage (Sekarang ke MateriController)
-    // Di Controller kamu namanya 'manageKuis'
-    Route::get('/materi/kuis/{id}', [MateriController::class, 'manageKuis'])->name('materi.kuis.manage');
+        // FIX ERROR: admin.materi.kuis.manage (Sekarang ke MateriController)
+        Route::get('/materi/kuis/{id}', [MateriController::class, 'manageKuis'])->name('materi.kuis.manage');
+        Route::get('/materi/{id}/logs', [MateriController::class, 'showLogs'])->name('materi.logs');
+        Route::get('admin/catin/{id}', [CatinController::class, 'show'])->name('admin.catin.show');
 
-    // FIX ERROR: admin.materi.logs
-    Route::get('/materi/{id}/logs', [MateriController::class, 'showLogs'])->name('materi.logs');
-
-    Route::get('admin/catin/{id}', [CatinController::class, 'show'])->name('admin.catin.show');
-
-
-// RUTE KUIS (Semua arahkan ke MateriController)
-    Route::prefix('kuis')->name('kuis.')->group(function () {
-        // Karena kamu tidak punya function index() khusus kuis yang berdiri sendiri, 
-        // biasanya rute 'index' ini diarahkan kembali ke manageKuis atau list materi
-        Route::get('/{id}', [MateriController::class, 'manageKuis'])->name('index');
-        
-        Route::post('/store-soal', [MateriController::class, 'storeSoal'])->name('storeSoal');
-        Route::put('/update-soal/{id}', [MateriController::class, 'updateSoal'])->name('updateSoal');
-        Route::delete('/soal-delete/{id}', [MateriController::class, 'destroySoal'])->name('destroySoal');
-        
-        Route::post('/update-inline/{id}', [MateriController::class, 'updateInline'])->name('updateInline');
-        Route::post('/update-urutan', [MateriController::class, 'updateUrutan'])->name('updateUrutan');
-        
-        // Rute untuk logs kuis
-        Route::get('/logs/{id}', [MateriController::class, 'showKuisLogs'])->name('logs');
-        // JSON endpoint untuk monitoring realtime (AJAX polling)
-        Route::get('/logs/{id}/json', [MateriController::class, 'apiKuisLogs'])->name('logs.json');
-        
-    });
-// ...
+        // RUTE KUIS (Semua arahkan ke MateriController)
+        Route::prefix('kuis')->name('kuis.')->group(function () {
+            Route::get('/{id}', [MateriController::class, 'manageKuis'])->name('index');
+            Route::post('/store-soal', [MateriController::class, 'storeSoal'])->name('storeSoal');
+            Route::put('/update-soal/{id}', [MateriController::class, 'updateSoal'])->name('updateSoal');
+            Route::delete('/soal-delete/{id}', [MateriController::class, 'destroySoal'])->name('destroySoal');
+            Route::post('/update-inline/{id}', [MateriController::class, 'updateInline'])->name('updateInline');
+            Route::post('/update-urutan', [MateriController::class, 'updateUrutan'])->name('updateUrutan');
+            Route::get('/logs/{id}', [MateriController::class, 'showKuisLogs'])->name('logs');
+            Route::get('/logs/{id}/json', [MateriController::class, 'apiKuisLogs'])->name('logs.json');
+        });
 
         // Master Data
         Route::resource('catin', CatinController::class);
@@ -87,12 +72,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('/check-whatsapp', [PendampingController::class, 'checkWhatsapp'])->name('checkWhatsapp');
         });
         
-        Route::resource('materi', MateriController::class);
         Route::resource('jadwal', JadwalController::class);
+        
+        // Rute khusus untuk tombol pengingat H-7
+        // Rute khusus untuk tombol pengingat H-7 (Global)
+        Route::post('/jadwal/kirim-reminder-h7', [ReminderController::class, 'sendH7Reminder'])->name('jadwal.reminder');
 
-
-
-        // Bagian Ujian & Sertifikat
         // Bagian Ujian & Sertifikat
         Route::prefix('ujian')->name('ujian.')->group(function () {
             Route::get('/', [UjianController::class, 'index'])->name('index'); 
@@ -114,15 +99,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::prefix('sertifikat')->name('sertifikat.')->group(function () {
             Route::get('/', [SertifikatController::class, 'index'])->name('index');
-            // Support per-individual certificate (suami / istri) via optional {person}
-            Route::get('/download/{id}/{person?}', [SertifikatController::class, 'download'])->name('download');
-            Route::get('/preview/{id}/{person?}', [SertifikatController::class, 'preview'])->name('preview');
+            
+            // PERBAIKAN RUTE CETAK: Cukup tulis path turunannya dan controller yang benar
+            Route::get('/cetak/{id}/{person}', [SertifikatController::class, 'stream'])->name('cetak');
+            Route::get('/download/{id}/{person}', [SertifikatController::class, 'download'])->name('download');
+            Route::get('/preview/{id}/{person}', [SertifikatController::class, 'preview'])->name('preview');
         });
 
         Route::get('/settings', [AdminAuthController::class, 'profile'])->name('settings');
         Route::post('/profile/update', [AdminAuthController::class, 'updateProfile'])->name('profile.update');
-
-                // Tambahkan di dalam group admin
         Route::resource('pengumuman', PengumumanController::class);
 
         // LAPORAN
@@ -131,18 +116,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/export', [ReportController::class, 'export'])->name('export');
         });
 
-// Di dalam web.php
-// Cukup tulis 'jadwal.presensi' karena otomatis jadi 'admin.jadwal.presensi'
+        // ==========================================
+        // RUTE ABSENSI WEB ADMIN (SUDAH DIPERBARUI)
+        // ==========================================
         Route::get('/absensi/{jadwal_id}', [AbsensiController::class, 'show'])->name('jadwal.presensi');
-
-// Begitu juga yang ini
-        Route::post('/absensi/update-status/{id}', [AbsensiController::class, 'updateStatus'])->name('presensi.update');
+        Route::post('/jadwal/{jadwal_id}/absensi-manual', [AbsensiController::class, 'storeManual'])->name('presensi.storeManual');
+        Route::delete('/absensi/{id}', [AbsensiController::class, 'destroy'])->name('presensi.destroy');
     });
 });
 
 Route::get('/materi-display/{id}', function ($id) {
     $materi = \App\Models\Materi::findOrFail($id);
-    $path = $materi->file; // Isinya 'materi/nama.pdf'
+    $path = $materi->file; 
 
     if (!Storage::disk('public')->exists($path)) {
         abort(404);

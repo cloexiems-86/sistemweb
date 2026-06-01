@@ -127,10 +127,7 @@
                                         <input type="radio" name="lokasi" value="Kantor KUA" class="w-4 h-4 text-[#4ce619] focus:ring-[#4ce619]" checked>
                                         <span class="text-sm font-bold text-gray-600 group-hover:text-gray-900 transition-colors">Kantor KUA</span>
                                     </label>
-                                    <label class="flex items-center gap-2 cursor-pointer group">
-                                        <input type="radio" name="lokasi" value="Rumah Catin" class="w-4 h-4 text-[#4ce619] focus:ring-[#4ce619]">
-                                        <span class="text-sm font-bold text-gray-600 group-hover:text-gray-900 transition-colors">Rumah Catin</span>
-                                    </label>
+
                                 </div>
                             </div>
                         </div>
@@ -145,7 +142,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             {{-- PEMATERI / PENGHULU --}}
                             <div class="md:col-span-1">
-                                <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1" id="label-petugas">Pilih Pemateri</label>
+                                <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1" id="label-petugas">Pilih Petugas</label>
                                 <div class="relative mt-1">
                                     <span class="material-symbols-outlined absolute left-3 top-2.5 text-gray-400 text-sm">person</span>
                                     <select name="fasilitator" required
@@ -222,9 +219,9 @@
                             @forelse($catins as $catin)
                             <label class="grid grid-cols-12 gap-4 px-5 py-4 hover:bg-green-50/30 dark:hover:bg-dark-surface transition-all items-center border-b border-gray-50 last:border-0 cursor-pointer group">
                                 <div class="col-span-2 flex justify-center">
-                                    {{-- PERHATIKAN: Menambahkan atribut data-tanggal-nikah di sini --}}
+                                    {{-- PERBAIKAN: Memanggil wedding_date dari database --}}
                                     <input type="checkbox" name="catin_ids[]" value="{{ $catin->id }}" 
-                                        data-tanggal-nikah="{{ $catin->tanggal_nikah ?? '' }}"
+                                        data-tanggal-nikah="{{ $catin->wedding_date ?? '' }}"
                                         onchange="hitungTanggalRapak()"
                                         class="catin-checkbox w-5 h-5 rounded-md border-gray-300 text-[#4ce619] focus:ring-[#4ce619] transition-all cursor-pointer">
                                 </div>
@@ -234,7 +231,8 @@
                                     </p>
                                     <p class="text-[10px] font-medium text-gray-400 mt-0.5">
                                         <span class="material-symbols-outlined text-[10px] align-middle">favorite</span>
-                                        Tgl Nikah: <span class="text-gray-500 font-bold">{{ $catin->tanggal_nikah ? \Carbon\Carbon::parse($catin->tanggal_nikah)->format('d M Y') : 'Belum Diset' }}</span>
+                                        {{-- PERBAIKAN: Menampilkan wedding_date --}}
+                                        Tgl Nikah: <span class="text-gray-500 font-bold">{{ $catin->wedding_date ? \Carbon\Carbon::parse($catin->wedding_date)->format('d M Y') : 'Belum Diset' }}</span>
                                     </p>
                                 </div>
                             </label>
@@ -295,7 +293,7 @@
             containerMateri.classList.remove('hidden');
             inputTopik.required = true;
             containerAgenda.classList.add('hidden');
-            labelPetugas.innerText = "Pilih Pemateri";
+            labelPetugas.innerText = "Pilih Petugas";
             hintRapak.classList.add('hidden');
         } else {
             containerMateri.classList.add('hidden');

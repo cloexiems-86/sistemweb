@@ -76,26 +76,28 @@ if ($total_materi > 0) {
     $response["data"]["progress"]["persentase"] = ($persen > 100) ? 100 : $persen;
 }
 
-// 6. Jadwal Terdekat
+// 6. Jadwal Terdekat (SUDAH DIPERBAIKI MENGGUNAKAN INNER JOIN KE TABEL PIVOT)
 $q_jadwal = mysqli_query($koneksi, "SELECT 
-            id, 
-            topik AS judul, 
-            tanggal, 
-            sesi AS jam, 
-            lokasi AS tempat, 
-            fasilitator AS narasumber, 
-            status,
+            j.id, 
+            j.topik AS judul, 
+            j.tanggal, 
+            j.sesi AS jam, 
+            j.lokasi AS tempat, 
+            j.fasilitator AS narasumber, 
+            j.status,
             'Silakan hadir tepat waktu sesuai jadwal yang tertera.' AS deskripsi
-        FROM jadwals 
-        WHERE pendamping_id = '$user_id' AND tanggal >= CURDATE() 
-        ORDER BY tanggal ASC LIMIT 1");
+        FROM jadwals j
+        INNER JOIN catin_jadwal cj ON j.id = cj.jadwal_id
+        WHERE cj.catin_id = '$user_id' AND j.tanggal >= CURDATE() 
+        ORDER BY j.tanggal ASC LIMIT 1");
+
 if ($q_jadwal && mysqli_num_rows($q_jadwal) > 0) {
     $row = mysqli_fetch_assoc($q_jadwal);
     
     $statusDb = strtolower($row['status']);
-    if ($statusDb == 'upcoming') {
+    if ($statusDb == 'upcoming' || $statusDb == 'mendatang') {
         $row['status'] = 'mendatang';
-    } elseif ($statusDb == 'completed') {
+    } elseif ($statusDb == 'completed' || $statusDb == 'selesai') {
         $row['status'] = 'selesai';
     }
     
@@ -111,3 +113,4 @@ while ($row = mysqli_fetch_assoc($q_materi)) {
 }
 
 echo json_encode($response);
+?>

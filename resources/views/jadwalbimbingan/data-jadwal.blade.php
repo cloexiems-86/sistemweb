@@ -12,19 +12,40 @@
 </script>
 @endif
 
+@if(session('error'))
+<script>
+    window.errorMessage = "{{ session('error') }}";
+</script>
+@endif
+
+@if(session('warning'))
+<script>
+    window.warningMessage = "{{ session('warning') }}";
+</script>
+@endif
+
 <div class="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-10">
     <div>
         <h1 class="text-3xl font-black tracking-tight uppercase">Manajemen Jadwal</h1>
         <p class="text-[#6c8863]">Kelola jadwal bimbingan calon pengantin KUA Mojo</p>
     </div>
 
-    <div class="flex gap-3">
+    <div class="flex flex-wrap gap-3">
         <div class="relative">
             <span class="material-symbols-outlined absolute left-3 top-2.5 text-gray-400 text-sm">search</span>
             <input type="text" id="search" placeholder="Cari topik..." 
                 class="pl-10 pr-4 py-2 border border-[#dee5dc] rounded-lg text-sm focus:ring-primary focus:border-primary dark:bg-dark-surface w-64"
             />
         </div>
+        
+        <form action="{{ route('admin.jadwal.reminder') }}" method="POST" class="inline" id="form-reminder">
+            @csrf
+            <button type="button" id="btn-reminder" class="flex items-center gap-2 px-6 py-2.5 bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 hover:-translate-y-0.5 transition-all">
+                <span class="material-symbols-outlined text-sm">notifications_active</span>
+                Kirim Notif H-7
+            </button>
+        </form>
+
         <a href="{{ route('admin.jadwal.create') }}"
             class="flex items-center gap-2 px-6 py-2.5 bg-primary text-[#131811] font-bold rounded-xl shadow-lg shadow-primary/20 hover:-translate-y-0.5 transition-all">
             <span class="material-symbols-outlined text-sm">add</span>
@@ -37,14 +58,12 @@
 <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
     <div class="bg-white dark:bg-dark-surface p-6 rounded-xl border border-[#dee5dc] shadow-sm">
         <p class="text-gray-500 text-xs font-bold uppercase tracking-wider">Total Jadwal</p>
-        {{-- Tetap menggunakan total() untuk menghitung seluruh baris di database --}}
         <h2 class="text-3xl font-black mt-1">{{ $jadwal->total() }}</h2>
     </div>
 
     <div class="bg-white dark:bg-dark-surface p-6 rounded-xl border border-[#dee5dc] shadow-sm border-l-4 border-l-green-500">
         <p class="text-gray-500 text-xs font-bold uppercase tracking-wider">Upcoming</p>
         <h2 class="text-3xl font-black mt-1 text-green-600">
-            {{-- Menggunakan App\Models\Jadwal langsung untuk menghitung seluruh data di DB, bukan cuma yang dipaginasi --}}
             {{ \App\Models\Jadwal::whereRaw('LOWER(status) = ?', ['upcoming'])->count() }}
         </h2>
     </div>
@@ -52,7 +71,6 @@
     <div class="bg-white dark:bg-dark-surface p-6 rounded-xl border border-[#dee5dc] shadow-sm border-l-4 border-l-blue-500">
         <p class="text-gray-500 text-xs font-bold uppercase tracking-wider">Selesai</p>
         <h2 class="text-3xl font-black mt-1 text-blue-600">
-            {{-- Menghitung status 'completed' atau 'selesai' dari seluruh database --}}
             {{ \App\Models\Jadwal::whereIn('status', ['Completed', 'Selesai', 'completed', 'selesai'])->count() }}
         </h2>
     </div>
@@ -70,9 +88,9 @@
         <table class="w-full text-left">
             <thead class="bg-gray-100 dark:bg-white/5 border-b border-[#dee5dc]">
                 <tr class="text-[11px] font-black uppercase tracking-widest text-gray-500">
-                    <th class="px-6 py-4">Tanggal & Lokasi</th> {{-- Tambah Lokasi --}}
+                    <th class="px-6 py-4">Tanggal & Lokasi</th>
                     <th class="px-6 py-4">Topik & Sesi</th>
-                    <th class="px-6 py-4">Peserta (Catin)</th> {{-- Tambah Relasi Catin --}}
+                    <th class="px-6 py-4">Peserta (Catin)</th>
                     <th class="px-6 py-4 text-center">Fasilitator</th>
                     <th class="px-6 py-4 text-center">Status</th>
                     <th class="px-6 py-4 text-center">Aksi</th>
@@ -103,7 +121,6 @@
         </td>
         <td class="px-6 py-4">
             <div class="flex flex-col gap-1">
-                {{-- Pastikan relasi di Model Jadwal bernama 'catins' --}}
                 @if($item->catins && $item->catins->count() > 0)
                     @foreach($item->catins as $catin)
                         <span class="text-[10px] bg-green-50 px-2 py-0.5 rounded border border-green-200 text-green-700 font-medium">
@@ -124,7 +141,6 @@
             </div>
         </td>
         <td class="px-6 py-4 text-center">
-            {{-- Perbaikan pengecekan status --}}
             @if(strtolower($item->status) == 'upcoming')
                 <span class="px-3 py-1 bg-green-100 text-green-700 text-[10px] rounded-full font-black uppercase">Upcoming</span>
             @else
@@ -132,10 +148,7 @@
             @endif
         </td>
         <td class="px-6 py-4 text-center">
-            {{-- Tombol Aksi tetap sama --}}
             <div class="flex justify-center gap-2">
-
-                {{-- Contoh penempatan di kolom Aksi pada table jadwal --}}
                 <a href="{{ route('admin.jadwal.presensi', $item->id) }}" class="bg-blue-100 text-blue-600 p-2 rounded-lg hover:bg-blue-600 hover:text-white transition-all" title="Lihat Presensi">
                     <span class="material-symbols-outlined text-sm">assignment_turned_in</span>
                 </a>
@@ -169,7 +182,7 @@
 </div>
 
 <script>
-    // Notifikasi Berhasil
+    // Penanganan Notifikasi dari Controller menggunakan SweetAlert2
     if(window.successMessage){
         Swal.fire({
             icon:'success',
@@ -178,6 +191,51 @@
             confirmButtonColor: '#4ce619',
         })
     }
+
+    if(window.errorMessage){
+        Swal.fire({
+            icon:'error',
+            title:'Gagal!',
+            text:window.errorMessage,
+            confirmButtonColor: '#ef4444',
+        })
+    }
+
+    if(window.warningMessage){
+        Swal.fire({
+            icon:'warning',
+            title:'Perhatian!',
+            text:window.warningMessage,
+            confirmButtonColor: '#f59e0b',
+        })
+    }
+
+    // Konfirmasi Kirim Notifikasi H-7 menggunakan SweetAlert2 agar senada dengan desainmu
+    document.getElementById('btn-reminder').addEventListener('click', function() {
+        Swal.fire({
+            title: 'Kirim Pengingat H-7?',
+            text: "Sistem akan mengecek jadwal 7 hari dari sekarang dan mengirim WA otomatis ke Pendamping.",
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#3b82f6', // Warna biru
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Kirim Sekarang!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Menampilkan loading state agar user tahu sistem sedang mengirim pesan
+                Swal.fire({
+                    title: 'Mengirim Pesan...',
+                    text: 'Mohon tunggu sebentar.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading()
+                    }
+                });
+                document.getElementById('form-reminder').submit();
+            }
+        });
+    });
 
     // Konfirmasi Hapus
     document.querySelectorAll('.btn-hapus').forEach(btn=>{

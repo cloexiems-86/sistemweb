@@ -5,36 +5,38 @@ header("Content-Type: application/json; charset=UTF-8");
 require_once 'koneksi.php';
 
 // Menangkap parameter user_id dari Flutter
-$userId = isset($_GET['user_id']) ? $_GET['user_id'] : '';
+$userId = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
 
-if (empty($userId)) {
+if ($userId == 0) {
     echo json_encode([
         "status" => "error",
-        "message" => "User ID (Catin) tidak ditemukan"
+        "message" => "User ID (Catin) tidak ditemukan",
+        "data" => []
     ]);
     exit;
 }
 
 /**
- * PENYESUAIAN DENGAN image_566d56.png DAN jadwal_page.dart:
+ * PENYESUAIAN DENGAN TABEL PIVOT LARAVEL:
+ * - Menggunakan INNER JOIN ke tabel `catin_jadwal` untuk mencocokkan pendaftaran bimbingan
  * - database 'topik' -> flutter 'judul'
- * - database 'sesi'  -> flutter 'jam'
+ * - database 'sesi'   -> flutter 'jam'
  * - database 'lokasi' -> flutter 'tempat'
  * - database 'fasilitator' -> flutter 'narasumber'
- * - database 'pendamping_id' -> filter berdasarkan user_id (catin)
  */
 $sql = "SELECT 
-            id, 
-            topik AS judul, 
-            tanggal, 
-            sesi AS jam, 
-            lokasi AS tempat, 
-            fasilitator AS narasumber, 
-            status,
+            j.id, 
+            j.topik AS judul, 
+            j.tanggal, 
+            j.sesi AS jam, 
+            j.lokasi AS tempat, 
+            j.fasilitator AS narasumber, 
+            j.status,
             'Silakan hadir tepat waktu sesuai jadwal yang tertera.' AS deskripsi
-        FROM jadwals 
-        WHERE pendamping_id = '$userId' 
-        ORDER BY tanggal ASC";
+        FROM jadwals j
+        INNER JOIN catin_jadwal cj ON j.id = cj.jadwal_id
+        WHERE cj.catin_id = '$userId' 
+        ORDER BY j.tanggal ASC";
 
 $result = mysqli_query($koneksi, $sql);
 $daftarJadwal = [];
@@ -45,11 +47,12 @@ if ($result) {
         $tanggalDb = strtotime($row['tanggal']);
         $sekarang = strtotime(date('Y-m-d'));
 
+        // Logika konversi status bawaan kamu tetap dipertahankan aman
         if ($tanggalDb < $sekarang && $statusDb != 'batal') {
             $row['status'] = 'selesai';
-        } elseif ($statusDb == 'upcoming') {
+        } elseif ($statusDb == 'upcoming' || $statusDb == 'mendatang') {
             $row['status'] = 'mendatang';
-        } elseif ($statusDb == 'completed') {
+        } elseif ($statusDb == 'completed' || $statusDb == 'selesai') {
             $row['status'] = 'selesai';
         }
         
@@ -64,7 +67,8 @@ if ($result) {
 } else {
     echo json_encode([
         "status" => "error",
-        "message" => "Gagal mengambil data: " . mysqli_error($koneksi)
+        "message" => "Gagal mengambil data: " . mysqli_error($koneksi),
+        "data" => []
     ]);
 }
 

@@ -4,9 +4,16 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthApiController;
 use App\Http\Controllers\Api\CatinApiController;
 use App\Http\Controllers\Api\PendampingApiController;
+use App\Http\Controllers\Api\AbsensiApiController; // Tambahan wajib untuk Absensi Digital
 
 // Public: Login Mobile
 Route::post('/login', [AuthApiController::class, 'login']);
+
+// ==========================================
+// RUTE ABSENSI DIGITAL BARU (DARI ANDROID)
+// Diletakkan di LUAR Sanctum karena Flutter mengirim user_id langsung
+// ==========================================
+Route::post('/absensi/hadir', [AbsensiApiController::class, 'submitAbsen']);
 
 Route::middleware('auth:sanctum')->group(function () {
     
@@ -16,7 +23,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/update-profile', [CatinApiController::class, 'updateProfile']);
         Route::get('/materi', [CatinApiController::class, 'getMateri']);
         Route::get('/jadwal', [CatinApiController::class, 'getJadwal']);
-        Route::post('/absensi', [CatinApiController::class, 'absensi']);
+        Route::post('/absensi', [CatinApiController::class, 'absensi']); // Rute absensi bawaan (dibiarkan agar aman)
         Route::get('/progres', [CatinApiController::class, 'checkProgres']); // Syarat skor > 70
         Route::get('/catin/materi-log', [CatinApiController::class, 'getMateriLog']);
         Route::post('/catin/update-materi-log', [CatinApiController::class, 'updateMateriLog']);
